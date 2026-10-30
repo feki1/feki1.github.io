@@ -1,0 +1,28 @@
+# Ignore agent and build artifacts
+.agents/
+.dartServer/
+node_modules/
+**/__pycache__/
+**/.dart_tool/
+**/build/
+.DS_Store
+Thumbs.db
+
+# Ignore personal documents and unrelated local files
+.cin.pdf
+cin.pdf
+passport.jpeg
+signature.jpeg
+signature amine.jpeg
+specimen de signature.pdf
+Attestation TCF.pdf
+attestation.pdf
+certificat .pdf
+confirmation of bookinng.pdf
+*corrige*.pdf
+TEST 3.pdf
+menyooStuff/
+menyooLog.txt
+ScriptHookV.log
+Mohamed_Seddik_Feki_Elite_Engineering_CV_260217_204256.pdf
+Mohamed_Seddik_Feki_Final_Resume.pdf

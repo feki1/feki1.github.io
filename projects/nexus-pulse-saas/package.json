@@ -1,0 +1,45 @@
+{
+  "name": "nexus-pulse-saas",
+  "version": "1.0.0",
+  "description": "NexusPulse: Full-Stack Enterprise Analytics & SaaS Web Platform with 50,000+ Time-Series LTTB Downsampling, JWT Token Rotation, and Granular RBAC",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "next": "^14.2.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "graphql": "^16.9.0",
+    "@apollo/server": "^4.11.0",
+    "jose": "^5.9.6",
+    "lucide-react": "^0.453.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.6.3",
+    "tailwindcss": "^3.4.14",
+    "postcss": "^8.4.47",
+    "autoprefixer": "^10.4.20"
+  },
+  "keywords": [
+    "nextjs",
+    "typescript",
+    "graphql",
+    "timeseries",
+    "lttb-algorithm",
+    "rbac",
+    "jwt-rotation",
+    "enterprise-saas",
+    "canvas-60fps"
+  ],
+  "author": "Mohamed Seddik Feki <seddikfeki15@gmail.com>",
+  "license": "MIT"
+}

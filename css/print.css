@@ -1,0 +1,169 @@
+/* ==========================================================================
+   Mohamed Seddik Feki - Universal Print Stylesheet (css/print.css)
+   Single-page A4 & US Letter ATS Print Optimization
+   ========================================================================== */
+
+@page {
+  size: auto;
+  margin: 10mm;
+}
+
+@media print {
+  html, body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    font-size: 9.25pt !important;
+    line-height: 1.32 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Suppress all interactive web UI chrome */
+  .no-print,
+  .cv-action-bar,
+  .btn-print,
+  .site-header,
+  .header-navbar,
+  .mobile-nav-drawer,
+  .theme-toggle,
+  .filter-bar,
+  .hero-actions,
+  .contact-form-container,
+  .copy-toast,
+  .site-footer,
+  nav,
+  button {
+    display: none !important;
+  }
+
+  /* Ensure clean link presentation without browser URL expansion */
+  a, a:visited {
+    color: #111827 !important;
+    text-decoration: none !important;
+  }
+
+  a[href]::after,
+  a::after {
+    content: "" !important;
+  }
+
+  /* Resume container reset for print */
+  .cv-page-wrapper,
+  .cv-sheet,
+  main {
+    background: transparent !important;
+    color: #111827 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  /* Ensure item headers stay side-by-side in print */
+  .cv-item-header,
+  .cv-item-subrow {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    gap: 0.25rem !important;
+  }
+
+  /* Tightly budgeted vertical spacing (<= 259.4mm net US Letter height) */
+  .cv-header {
+    padding-bottom: 1.5mm !important;
+    margin-bottom: 2mm !important;
+    border-bottom: 1.25pt solid #111827 !important;
+  }
+
+  .cv-section,
+  .resume-section,
+  section {
+    margin-bottom: 2mm !important;
+    padding-bottom: 0 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .cv-item {
+    margin-bottom: 1.25mm !important;
+  }
+
+  h1, h2, h3, .cv-item {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    color: #111827 !important;
+  }
+
+  .cv-name {
+    font-size: 15pt !important;
+    line-height: 1.1 !important;
+    margin-bottom: 0.75mm !important;
+  }
+
+  .cv-headline {
+    font-size: 9pt !important;
+    color: #1f2937 !important;
+    margin-bottom: 1mm !important;
+  }
+
+  .cv-contact-line {
+    font-size: 8.25pt !important;
+  }
+
+  .cv-mobility-line {
+    font-size: 8pt !important;
+    margin-top: 0.5mm !important;
+  }
+
+  .cv-summary-text {
+    font-size: 8.5pt !important;
+    line-height: 1.28 !important;
+  }
+
+  .cv-section-title {
+    font-size: 9pt !important;
+    padding-bottom: 0.5mm !important;
+    margin-bottom: 1mm !important;
+    border-bottom: 0.75pt solid #374151 !important;
+  }
+
+  .cv-item-title {
+    font-size: 8.85pt !important;
+  }
+
+  .cv-item-subtitle,
+  .cv-item-meta,
+  .cv-honors-tag {
+    font-size: 8.25pt !important;
+  }
+
+  .bullet-list {
+    margin-top: 0.4mm !important;
+    margin-bottom: 0.5mm !important;
+  }
+
+  .bullet-list li,
+  .cv-skills-list li,
+  .cv-lang-list li {
+    font-size: 8.35pt !important;
+    line-height: 1.26 !important;
+    margin-bottom: 0.35mm !important;
+  }
+}

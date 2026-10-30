@@ -1,0 +1,1929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniTrack — Cross-Platform Fleet Telemetry &amp; SQLite Sync Simulator | Mohamed Seddik Feki</title>
+  <meta name="description" content="OmniTrack Interactive Simulator — Cross-platform Flutter &amp; Dart Fleet Telemetry and Offline-First SQLite Synchronization Engine by Mohamed Seddik Feki.">
+  <meta name="theme-color" content="#070c18">
+  <style>
+    /* Reset & Typography */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #070c18;
+      --bg-card: #0f172a;
+      --bg-card-subtle: #1e293b;
+      --border-color: #334155;
+      --border-focus: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #0284c7;
+      --primary-light: #38bdf8;
+      --success: #10b981;
+      --success-light: #34d399;
+      --warning: #f59e0b;
+      --warning-light: #fbbf24;
+      --danger: #ef4444;
+      --danger-light: #f87171;
+      --purple: #a78bfa;
+      --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-stack);
+      line-height: 1.5;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Header */
+    .top-navbar {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0.75rem 1.5rem;
+    }
+
+    .nav-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-brand-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+      color: var(--text-main);
+      border-color: var(--primary-light);
+      background: #253349;
+    }
+
+    .brand-title-box h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .badge-pill {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-cyan {
+      background: rgba(2, 132, 199, 0.2);
+      color: var(--primary-light);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .badge-green {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success-light);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+    }
+
+    .badge-amber {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning-light);
+      border: 1px solid rgba(251, 191, 36, 0.35);
+    }
+
+    .badge-red {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger-light);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+
+    .brand-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .view-tab-btn {
+      padding: 0.45rem 0.9rem;
+      font-size: 0.825rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .view-tab-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card-subtle);
+    }
+
+    .view-tab-btn.active {
+      color: var(--text-main);
+      background: var(--bg-card-subtle);
+      border-color: var(--primary);
+    }
+
+    /* Main Container Grid */
+    .simulator-workspace {
+      flex: 1;
+      max-width: 1600px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 1.75rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .simulator-workspace {
+        grid-template-columns: 1fr;
+      }
+      .phone-container-wrapper {
+        position: relative;
+        top: 0;
+      }
+    }
+
+    /* Left Column: Phone Mockup Frame */
+    .phone-container-wrapper {
+      display: flex;
+      justify-content: center;
+      position: sticky;
+      top: 5rem;
+    }
+
+    .phone-frame {
+      width: 100%;
+      max-width: 420px;
+      height: 850px;
+      max-height: 90vh;
+      background: #000;
+      border-radius: 46px;
+      padding: 11px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8),
+                  0 0 0 1px rgba(255, 255, 255, 0.15),
+                  0 0 40px rgba(2, 132, 199, 0.15);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phone-screen {
+      flex: 1;
+      background: var(--bg-dark);
+      border-radius: 38px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Phone Status Bar */
+    .phone-status-bar {
+      height: 40px;
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-main);
+      position: relative;
+      z-index: 10;
+    }
+
+    .dynamic-island {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 7px;
+      width: 110px;
+      height: 25px;
+      background: #000;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.2);
+    }
+
+    .dynamic-camera {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #111;
+      border: 1px solid #222;
+    }
+
+    .dynamic-sensor {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #065f46;
+      box-shadow: 0 0 6px var(--success);
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* App Header inside phone */
+    .app-header {
+      background: var(--bg-card);
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .app-logo {
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 900;
+      padding: 0.2rem 0.45rem;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .app-title-text {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .net-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .net-status-pill.online {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid var(--success);
+      color: var(--success-light);
+    }
+
+    .net-status-pill.offline {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid var(--danger);
+      color: var(--danger-light);
+    }
+
+    .pulse-dot-small {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Vehicle Chip Carousel */
+    .vehicle-selector-bar {
+      background: #0a0f1d;
+      padding: 0.5rem 0.75rem;
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .vehicle-selector-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .veh-chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .veh-chip:hover {
+      border-color: var(--primary-light);
+      color: var(--text-main);
+    }
+
+    .veh-chip.active {
+      background: rgba(2, 132, 199, 0.25);
+      border-color: var(--primary-light);
+      color: var(--text-main);
+    }
+
+    .veh-chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    /* Radar Map Canvas Container */
+    .radar-map-container {
+      position: relative;
+      flex: 1;
+      min-height: 240px;
+      background: #050811;
+      overflow: hidden;
+    }
+
+    #mobile-gps-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .map-overlay-tag {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      background: rgba(7, 12, 24, 0.85);
+      backdrop-filter: blur(4px);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--primary-light);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .map-coords-tag {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      background: rgba(7, 12, 24, 0.85);
+      backdrop-filter: blur(4px);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--text-muted);
+    }
+
+    /* Telemetry Info Bottom Sheet */
+    .telemetry-bottom-panel {
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-color);
+      padding: 0.85rem 1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .veh-info-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .veh-callsign {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .veh-meta-text {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .telemetry-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+
+    .metric-box {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.45rem 0.6rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .metric-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .metric-val-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.2rem;
+      margin-top: 0.1rem;
+    }
+
+    .metric-value {
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .metric-unit {
+      font-size: 0.62rem;
+      color: var(--text-dim);
+    }
+
+    /* Battery progress bar */
+    .battery-bar-container {
+      width: 100%;
+      height: 4px;
+      background: #334155;
+      border-radius: 2px;
+      margin-top: 0.3rem;
+      overflow: hidden;
+    }
+
+    .battery-fill {
+      height: 100%;
+      background: var(--success);
+      width: 88%;
+      transition: width 0.3s ease, background 0.3s ease;
+    }
+
+    /* Dispatch Action Buttons */
+    .dispatch-triggers-box {
+      margin-top: 0.2rem;
+    }
+
+    .dispatch-triggers-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+
+    .dispatch-btn-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.4rem;
+    }
+
+    .action-btn {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.45rem 0.2rem;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+      user-select: none;
+    }
+
+    .action-btn:hover {
+      background: #28374d;
+      border-color: var(--primary-light);
+    }
+
+    .action-btn.sos {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: var(--danger);
+      color: var(--danger-light);
+    }
+
+    .action-btn.sos:hover {
+      background: rgba(239, 68, 68, 0.35);
+    }
+
+    /* Right Column: Engineering Inspector */
+    .inspector-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .inspector-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.25rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .card-header-split {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .card-title-group h2 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-desc-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    /* Online / Offline Big Switcher Card */
+    .network-mode-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      margin-bottom: 1rem;
+    }
+
+    .network-meta-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .net-mode-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .net-mode-desc {
+      font-size: 0.775rem;
+      color: var(--text-muted);
+    }
+
+    .toggle-switch-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 54px;
+      height: 30px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #dc2626;
+      transition: .3s;
+      border-radius: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 4px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    input:checked + .slider {
+      background-color: #059669;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    .toggle-switch input:focus-visible + .slider {
+      outline: 2px solid var(--primary-light);
+      outline-offset: 3px;
+    }
+
+    .net-status-pill:focus-visible,
+    .tool-btn:focus-visible,
+    .action-btn:focus-visible,
+    .veh-chip:focus-visible,
+    .view-tab-btn:focus-visible,
+    .code-tab:focus-visible,
+    .back-btn:focus-visible {
+      outline: 2px solid var(--primary-light);
+      outline-offset: 2px;
+    }
+
+    /* Inspector Stat Cards Row */
+    .inspector-metrics-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .inspector-metrics-strip {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stat-tile {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-number {
+      font-family: var(--font-mono);
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-top: 0.2rem;
+      color: var(--text-main);
+    }
+
+    .stat-sub {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    /* Inspector Action Toolbar */
+    .inspector-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .tool-btn {
+      padding: 0.45rem 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      background: var(--bg-card-subtle);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .tool-btn:hover {
+      background: #253349;
+      border-color: var(--primary-light);
+    }
+
+    .tool-btn.primary {
+      background: var(--primary);
+      border-color: var(--primary-light);
+      color: #fff;
+    }
+
+    .tool-btn.primary:hover {
+      background: #0274b0;
+    }
+
+    /* SQLite Table Live Viewer */
+    .table-container {
+      background: #080d1a;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow-x: auto;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .queue-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-align: left;
+    }
+
+    .queue-table th {
+      background: #0d1527;
+      color: var(--text-muted);
+      font-weight: 700;
+      padding: 0.6rem 0.8rem;
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .queue-table td {
+      padding: 0.5rem 0.8rem;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    .queue-table tr:hover td {
+      background: rgba(2, 132, 199, 0.08);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 800;
+    }
+
+    .status-pending {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning-light);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .status-synced {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success-light);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    /* Source Code Explorer View */
+    .code-explorer-container {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 1.5rem;
+    }
+
+    .code-tabs-bar {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .code-tab {
+      padding: 0.5rem 1rem;
+      font-size: 0.825rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .code-tab:hover {
+      color: var(--text-main);
+      border-color: var(--primary-light);
+    }
+
+    .code-tab.active {
+      background: var(--bg-card-subtle);
+      color: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .code-block-wrapper {
+      background: #090e1a;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .code-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 1rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    .code-content-view {
+      padding: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #e2e8f0;
+      overflow-x: auto;
+      max-height: 700px;
+      white-space: pre;
+    }
+
+    /* Footer */
+    .site-footer {
+      border-top: 1px solid var(--border-color);
+      background: var(--bg-card);
+      padding: 1.25rem 1.5rem;
+      margin-top: auto;
+    }
+
+    .footer-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .footer-link {
+      color: var(--primary-light);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="top-navbar">
+    <div class="nav-inner">
+      <div class="nav-brand-group">
+        <a href="../../../index.html" class="back-btn" title="Return to Portfolio">
+          <span>&larr;</span> Portfolio
+        </a>
+        <div class="brand-title-box">
+          <h1>
+            OmniTrack Fleet &amp; Telemetry Simulator
+            <span class="badge-pill badge-cyan">Flutter &amp; Dart</span>
+            <span class="badge-pill badge-green" id="header-net-pill">5G Connected</span>
+          </h1>
+          <div class="brand-subtitle">
+            Sub-Second GPS Streaming (250ms) &bull; Offline-First SQLite Sync Engine &bull; Candidate: Mohamed Seddik Feki (XMUM Honours)
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button type="button" class="view-tab-btn active" id="tab-btn-sim" onclick="switchView('sim')">
+          📱 Live Simulator &amp; Sync Inspector
+        </button>
+        <button type="button" class="view-tab-btn" id="tab-btn-code" onclick="switchView('code')">
+          💻 Source Code Explorer
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- View 1: Interactive Mobile Simulator & Engineering Inspector -->
+  <main class="simulator-workspace" id="view-simulator">
+
+    <!-- Column 1: Realistic Phone Mockup Frame -->
+    <div class="phone-container-wrapper">
+      <div class="phone-frame">
+        <div class="phone-screen">
+
+          <!-- Phone Status Bar with Dynamic Island -->
+          <div class="phone-status-bar">
+            <span id="phone-clock">09:41</span>
+            <div class="dynamic-island">
+              <div class="dynamic-camera"></div>
+              <div class="dynamic-sensor"></div>
+            </div>
+            <div class="status-icons">
+              <span id="phone-carrier-tag">5G</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L12 22l7.03-4.39C20.26 16.07 21 14.12 21 12c0-4.97-4.03-9-9-9z"/>
+              </svg>
+              <svg width="18" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="2" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M22 10v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <rect x="4" y="7" width="12" height="10" rx="1.5" fill="currentColor"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Inside App Header -->
+          <div class="app-header">
+            <div class="app-brand">
+              <span class="app-logo">OMNITRACK</span>
+              <span class="app-title-text">Fleet Radar Live</span>
+            </div>
+            <div class="net-status-pill online" id="phone-net-pill" onclick="toggleNetworkMode()" onkeydown="handlePillKeydown(event)" tabindex="0" role="button" aria-label="Toggle network connectivity mode" title="Click or press Enter to toggle Online/Offline">
+              <span class="pulse-dot-small"></span>
+              <span id="phone-net-text">5G ONLINE</span>
+            </div>
+          </div>
+
+          <!-- Vehicle Selector Carousel -->
+          <div class="vehicle-selector-bar" id="vehicle-chips-bar">
+            <!-- Populated via JS -->
+          </div>
+
+          <!-- Radar Map Canvas -->
+          <div class="radar-map-container">
+            <canvas id="mobile-gps-canvas" width="400" height="320"></canvas>
+            <div class="map-overlay-tag">SECTOR: SEPANG / CYBERJAYA [250ms STREAM]</div>
+            <div class="map-coords-tag" id="map-coords-display">LAT: 2.92134 LNG: 101.65592</div>
+          </div>
+
+          <!-- Active Vehicle Telemetry Panel -->
+          <div class="telemetry-bottom-panel">
+            <div class="veh-info-header">
+              <div>
+                <div class="veh-callsign" id="veh-active-title">TRK-101 (Alpha Hauler)</div>
+                <div class="veh-meta-text" id="veh-active-subtitle">Heavy Transport &bull; Route Sepang-KLIA</div>
+              </div>
+              <span class="badge-pill badge-cyan" id="veh-sync-status-badge">CLOUD STREAMING</span>
+            </div>
+
+            <!-- Telemetry Metrics Grid -->
+            <div class="telemetry-metrics-grid">
+              <div class="metric-box">
+                <span class="metric-label">SPEED</span>
+                <div class="metric-val-row">
+                  <span class="metric-value" id="val-speed">68.4</span>
+                  <span class="metric-unit">km/h</span>
+                </div>
+              </div>
+
+              <div class="metric-box">
+                <span class="metric-label">HEADING</span>
+                <div class="metric-val-row">
+                  <span class="metric-value" id="val-heading">042</span>
+                  <span class="metric-unit">&deg; N</span>
+                </div>
+              </div>
+
+              <div class="metric-box">
+                <span class="metric-label">BATTERY</span>
+                <div class="metric-val-row">
+                  <span class="metric-value" id="val-battery">88</span>
+                  <span class="metric-unit">%</span>
+                </div>
+                <div class="battery-bar-container">
+                  <div class="battery-fill" id="val-battery-fill"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dispatch Triggers -->
+            <div class="dispatch-triggers-box">
+              <div class="dispatch-triggers-label">OPERATIONAL DISPATCH TRIGGERS</div>
+              <div class="dispatch-btn-row">
+                <button type="button" class="action-btn" onclick="triggerDispatch('route_reroute_req')">
+                  🔄 Reroute
+                </button>
+                <button type="button" class="action-btn" onclick="triggerDispatch('checkpoint_logged')">
+                  📍 Checkpoint
+                </button>
+                <button type="button" class="action-btn sos" onclick="triggerDispatch('sos_emergency_ping')">
+                  🚨 SOS Ping
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 2: Engineering & SQLite Offline Sync Inspector -->
+    <div class="inspector-panel">
+
+      <!-- Online / Offline Switcher Card -->
+      <div class="inspector-card">
+        <div class="network-mode-banner">
+          <div class="network-meta-box">
+            <div class="net-mode-title" id="inspector-net-title">
+              <span style="color: var(--success-light);">&bull;</span>
+              Network: 5G Cloud Connected (Firebase Firestore)
+            </div>
+            <div class="net-mode-desc" id="inspector-net-desc">
+              Packets stream directly to cloud with sub-second acknowledgment. Switch offline to simulate tunnel transit.
+            </div>
+          </div>
+
+          <div class="toggle-switch-wrapper">
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Airplane / Tunnel</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="net-toggle-input" checked onchange="handleToggleChange(this.checked)" aria-label="Toggle 5G Online or Offline mode">
+              <span class="slider"></span>
+            </label>
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--success-light);">5G Online</span>
+          </div>
+        </div>
+
+        <!-- Metrics Strip -->
+        <div class="inspector-metrics-strip">
+          <div class="stat-tile">
+            <span class="stat-label">Pending in SQLite</span>
+            <span class="stat-number" id="stat-pending" style="color: var(--warning-light);">0</span>
+            <span class="stat-sub">is_synced = 0</span>
+          </div>
+
+          <div class="stat-tile">
+            <span class="stat-label">Cloud Firestore Synced</span>
+            <span class="stat-number" id="stat-synced" style="color: var(--success-light);">0</span>
+            <span class="stat-sub">ACK Received</span>
+          </div>
+
+          <div class="stat-tile">
+            <span class="stat-label">Sampling Frequency</span>
+            <span class="stat-number" style="color: var(--primary-light);">4.0 Hz</span>
+            <span class="stat-sub">250ms GPS Tick</span>
+          </div>
+
+          <div class="stat-tile">
+            <span class="stat-label">Avg SQLite Flush Latency</span>
+            <span class="stat-number" id="stat-latency" style="color: var(--purple);">32 ms</span>
+            <span class="stat-sub">FIFO Batch Buffer</span>
+          </div>
+        </div>
+
+        <!-- Toolbar Buttons -->
+        <div class="inspector-toolbar">
+          <button type="button" class="tool-btn primary" onclick="forceFlushQueue()">
+            ⚡ Force Cloud Flush
+          </button>
+          <button type="button" class="tool-btn" onclick="triggerDispatch('geofence_exit_alert')">
+            ➕ Inject Geofence Alert
+          </button>
+          <button type="button" class="tool-btn" onclick="clearSyncedRows()">
+            🧹 Clear Synced SQLite Cache
+          </button>
+          <button type="button" class="tool-btn" onclick="simulatePacketBurst()">
+            📦 Rapid 10-Packet Burst
+          </button>
+        </div>
+
+        <!-- Simulated SQLite Table Viewer -->
+        <div class="card-header-split" style="margin-bottom: 0.5rem;">
+          <div class="card-title-group">
+            <h2>
+              <span>💾</span>
+              Local SQLite Database: <code style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--primary-light);">telemetry_queue</code>
+            </h2>
+            <div class="card-desc-text">
+              Real-time audit of local relational rows. Unsynced packets persist across disconnects and flush in FIFO sequence.
+            </div>
+          </div>
+          <span class="badge-pill badge-cyan" id="table-row-count-badge">0 Rows</span>
+        </div>
+
+        <div class="table-container">
+          <table class="queue-table">
+            <thead>
+              <tr>
+                <th>Seq ID</th>
+                <th>Vehicle ID</th>
+                <th>Coordinates (Lat, Lng)</th>
+                <th>Speed</th>
+                <th>Battery</th>
+                <th>Event Type</th>
+                <th>Sync Status</th>
+                <th>Timestamp (UTC)</th>
+              </tr>
+            </thead>
+            <tbody id="sqlite-table-body">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- View 2: Embedded Source Code Explorer -->
+  <section class="code-explorer-container" id="view-code-explorer">
+    <div class="code-tabs-bar">
+      <button type="button" class="code-tab active" onclick="loadSourceCode('packet')">
+        📄 telemetry_packet.dart
+      </button>
+      <button type="button" class="code-tab" onclick="loadSourceCode('sync')">
+        ⚙️ offline_sync_engine.dart
+      </button>
+      <button type="button" class="code-tab" onclick="loadSourceCode('main')">
+        📱 main.dart (Flutter UI &amp; Canvas)
+      </button>
+      <button type="button" class="code-tab" onclick="loadSourceCode('pubspec')">
+        📦 pubspec.yaml
+      </button>
+      <button type="button" class="code-tab" onclick="loadSourceCode('readme')">
+        📖 README.md
+      </button>
+    </div>
+
+    <div class="code-block-wrapper">
+      <div class="code-header-bar">
+        <span id="code-file-label" style="color: var(--primary-light); font-weight: 700;">lib/models/telemetry_packet.dart</span>
+        <button type="button" class="tool-btn" onclick="copyCurrentCode()">📋 Copy Source Code</button>
+      </div>
+      <div class="code-content-view" id="code-display"></div>
+    </div>
+  </section>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>OmniTrack Mobile Architecture</strong> &bull; Developed by <a href="../../../index.html" class="footer-link">Mohamed Seddik Feki</a>
+        (Xiamen University Malaysia Honours Engineering Candidate).
+      </div>
+      <div>
+        <a href="https://github.com/fekiseddik/omnitrack-mobile-flutter" target="_blank" rel="noopener noreferrer" class="footer-link">
+          GitHub Repository &rarr;
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Script -->
+  <script>
+    (function () {
+      'use strict';
+
+      // 1. Fleet Vehicle Model & Simulation State
+      const VEHICLES = [
+        {
+          id: 'TRK-101',
+          callsign: 'Alpha Heavy Cargo',
+          type: 'Heavy Truck',
+          route: 'Sepang — KLIA Expressway',
+          color: '#38bdf8',
+          baseLat: 2.9213,
+          baseLng: 101.6559,
+          radius: 0.016,
+          speedFactor: 0.85
+        },
+        {
+          id: 'VAN-204',
+          callsign: 'Beta Express Courier',
+          type: 'Transit Van',
+          route: 'Cyberjaya Tech Hub — Putrajaya',
+          color: '#34d399',
+          baseLat: 2.9341,
+          baseLng: 101.6682,
+          radius: 0.022,
+          speedFactor: 1.25
+        },
+        {
+          id: 'EV-309',
+          callsign: 'Gamma Urban Delivery',
+          type: 'Electric Van',
+          route: 'Dengkil Distribution Center',
+          color: '#a78bfa',
+          baseLat: 2.9105,
+          baseLng: 101.6421,
+          radius: 0.013,
+          speedFactor: 1.05
+        },
+        {
+          id: 'DRN-412',
+          callsign: 'Delta Recon Quadcopter',
+          type: 'Autonomous Drone',
+          route: 'Sepang Outer Perimeter',
+          color: '#fbbf24',
+          baseLat: 2.9420,
+          baseLng: 101.6810,
+          radius: 0.028,
+          speedFactor: 1.65
+        }
+      ];
+
+      let selectedVehicleId = 'TRK-101';
+      let isOnline = true;
+      let isFlushing = false;
+      let simTick = 0;
+      let radarAngle = 0;
+      let sequenceId = 1;
+
+      // In-memory Simulated SQLite telemetry_queue table
+      const sqliteQueue = [];
+      let totalCloudSynced = 0;
+
+      // Telemetry Packet Store
+      const vehicleTelemetry = {};
+
+      // Initialize Vehicle State
+      VEHICLES.forEach(v => {
+        vehicleTelemetry[v.id] = {
+          vehicleId: v.id,
+          lat: v.baseLat,
+          lng: v.baseLng,
+          speed: 45.0 * v.speedFactor,
+          heading: 90,
+          battery: 92,
+          timestamp: Date.now(),
+          isSynced: true
+        };
+      });
+
+      // 2. Render Vehicle Selection Chips
+      const chipsBar = document.getElementById('vehicle-chips-bar');
+      VEHICLES.forEach((v, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'veh-chip' + (idx === 0 ? ' active' : '');
+        btn.setAttribute('data-id', v.id);
+        btn.innerHTML = `<span class="veh-chip-dot" style="background:${v.color}"></span> ${v.id}`;
+        btn.addEventListener('click', () => selectVehicle(v.id));
+        chipsBar.appendChild(btn);
+      });
+
+      function selectVehicle(id) {
+        selectedVehicleId = id;
+        document.querySelectorAll('.veh-chip').forEach(c => {
+          c.classList.toggle('active', c.getAttribute('data-id') === id);
+        });
+        updateVehicleInfoPanel();
+      }
+
+      function updateVehicleInfoPanel() {
+        const v = VEHICLES.find(item => item.id === selectedVehicleId);
+        const data = vehicleTelemetry[selectedVehicleId];
+        if (!v || !data) return;
+
+        document.getElementById('veh-active-title').textContent = `${v.id} (${v.callsign.split(' ')[0]})`;
+        document.getElementById('veh-active-subtitle').textContent = `${v.type} • ${v.route}`;
+        document.getElementById('val-speed').textContent = data.speed.toFixed(1);
+        document.getElementById('val-heading').textContent = String(Math.round(data.heading)).padStart(3, '0');
+        document.getElementById('val-battery').textContent = Math.round(data.battery);
+
+        const fill = document.getElementById('val-battery-fill');
+        fill.style.width = Math.max(5, data.battery) + '%';
+        if (data.battery < 20) {
+          fill.style.background = 'var(--danger)';
+        } else if (data.battery < 50) {
+          fill.style.background = 'var(--warning)';
+        } else {
+          fill.style.background = 'var(--success)';
+        }
+
+        const badge = document.getElementById('veh-sync-status-badge');
+        if (isOnline) {
+          badge.textContent = 'CLOUD STREAMING';
+          badge.className = 'badge-pill badge-cyan';
+        } else {
+          badge.textContent = 'BUFFERING IN SQLITE';
+          badge.className = 'badge-pill badge-amber';
+        }
+
+        document.getElementById('map-coords-display').textContent =
+          `LAT: ${data.lat.toFixed(5)}  LNG: ${data.lng.toFixed(5)}`;
+      }
+
+      // 3. Sub-Second GPS Simulation Loop (250ms periodic tick)
+      setInterval(() => {
+        simTick += 0.04;
+        radarAngle = (radarAngle + 0.08) % (2 * Math.PI);
+
+        VEHICLES.forEach((v, i) => {
+          const phase = i * (Math.PI / 2);
+          const angle = (simTick * v.speedFactor) + phase;
+
+          // Kinematic trajectory calculation
+          const lat = v.baseLat + (v.radius * Math.sin(angle));
+          const lng = v.baseLng + (v.radius * 1.35 * Math.cos(angle));
+
+          // Tangent heading
+          const dLat = Math.cos(angle);
+          const dLng = -1.35 * Math.sin(angle);
+          let heading = (Math.atan2(dLng, dLat) * 180 / Math.PI);
+          if (heading < 0) heading += 360;
+
+          // Realistic fluctuations
+          const speed = Math.max(15, (48 + 20 * Math.sin(angle * 2.5)) * v.speedFactor);
+          const battery = Math.max(14, 98 - ((simTick * 0.12) % 80));
+
+          vehicleTelemetry[v.id] = {
+            vehicleId: v.id,
+            lat,
+            lng,
+            speed,
+            heading,
+            battery,
+            timestamp: Date.now(),
+            isSynced: isOnline
+          };
+
+          // If offline, buffer periodic telemetry packet into local SQLite queue
+          if (!isOnline) {
+            enqueueSqlitePacket({
+              id: sequenceId++,
+              vehicleId: v.id,
+              lat,
+              lng,
+              speed,
+              heading,
+              battery,
+              eventType: 'periodic_telemetry',
+              isSynced: false,
+              timestamp: Date.now()
+            });
+          } else {
+            totalCloudSynced++;
+          }
+        });
+
+        updateVehicleInfoPanel();
+        updateInspectorStats();
+      }, 250);
+
+      // 4. SQLite Queue Ingestion & Table Rendering
+      function enqueueSqlitePacket(packet) {
+        sqliteQueue.unshift(packet);
+        if (sqliteQueue.length > 100) {
+          sqliteQueue.pop(); // Keep inspector memory bounded
+        }
+        renderSqliteTable();
+      }
+
+      function renderSqliteTable() {
+        const tbody = document.getElementById('sqlite-table-body');
+        if (!tbody) return;
+
+        const rowsHtml = sqliteQueue.slice(0, 30).map(row => {
+          const statusHtml = row.isSynced
+            ? `<span class="status-badge status-synced">&check; SYNCED</span>`
+            : `<span class="status-badge status-pending">&bull; PENDING</span>`;
+          const timeStr = new Date(row.timestamp).toISOString().substring(11, 23);
+
+          return `
+            <tr>
+              <td>#${row.id}</td>
+              <td style="font-weight:700; color:${getVehColor(row.vehicleId)}">${row.vehicleId}</td>
+              <td>${row.lat.toFixed(4)}, ${row.lng.toFixed(4)}</td>
+              <td>${row.speed.toFixed(1)} km/h</td>
+              <td>${Math.round(row.battery)}%</td>
+              <td><code>${row.eventType}</code></td>
+              <td>${statusHtml}</td>
+              <td>${timeStr}</td>
+            </tr>
+          `;
+        }).join('');
+
+        tbody.innerHTML = rowsHtml || `<tr><td colspan="8" style="text-align:center; padding:1.5rem; color:var(--text-dim);">SQLite telemetry_queue is currently empty.</td></tr>`;
+        document.getElementById('table-row-count-badge').textContent = `${sqliteQueue.length} Rows Cached`;
+      }
+
+      function getVehColor(id) {
+        const v = VEHICLES.find(item => item.id === id);
+        return v ? v.color : '#38bdf8';
+      }
+
+      function updateInspectorStats() {
+        const pending = sqliteQueue.filter(p => !p.isSynced).length;
+        document.getElementById('stat-pending').textContent = pending;
+        document.getElementById('stat-synced').textContent = totalCloudSynced;
+      }
+
+      // 5. Automated Background FIFO Cloud Flush
+      let flushIntervalTimer = null;
+
+      function flushOfflineQueue() {
+        if (!isOnline || isFlushing) return;
+        const pendingItems = sqliteQueue.filter(p => !p.isSynced);
+        if (pendingItems.length === 0) return;
+
+        isFlushing = true;
+        const flushStartTime = performance.now();
+        let itemsFlushed = 0;
+        if (flushIntervalTimer) {
+          clearInterval(flushIntervalTimer);
+        }
+        flushIntervalTimer = setInterval(() => {
+          if (!isOnline) {
+            clearInterval(flushIntervalTimer);
+            flushIntervalTimer = null;
+            isFlushing = false;
+            return;
+          }
+
+          // Flush oldest unsynced first (FIFO order)
+          const oldestPending = sqliteQueue.slice().reverse().find(p => !p.isSynced);
+          if (oldestPending) {
+            oldestPending.isSynced = true;
+            totalCloudSynced++;
+            itemsFlushed++;
+            const avgMs = Math.round((performance.now() - flushStartTime) / itemsFlushed);
+            const latencyEl = document.getElementById('stat-latency');
+            if (latencyEl) {
+              latencyEl.textContent = `${Math.max(18, Math.min(avgMs, 85))} ms`;
+            }
+            renderSqliteTable();
+            updateInspectorStats();
+          } else {
+            clearInterval(flushIntervalTimer);
+            flushIntervalTimer = null;
+            isFlushing = false;
+          }
+        }, 80);
+      }
+
+      // 6. Online / Offline Switching Handlers
+      window.handleToggleChange = function (checked) {
+        isOnline = checked;
+        syncNetworkUiState();
+      };
+
+      window.toggleNetworkMode = function () {
+        isOnline = !isOnline;
+        document.getElementById('net-toggle-input').checked = isOnline;
+        syncNetworkUiState();
+      };
+
+      window.handlePillKeydown = function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          window.toggleNetworkMode();
+        }
+      };
+
+      function syncNetworkUiState() {
+        if (!isOnline) {
+          if (flushIntervalTimer) {
+            clearInterval(flushIntervalTimer);
+            flushIntervalTimer = null;
+          }
+          isFlushing = false;
+        }
+
+        const headerPill = document.getElementById('header-net-pill');
+        const phonePill = document.getElementById('phone-net-pill');
+        const phoneNetText = document.getElementById('phone-net-text');
+        const phoneCarrier = document.getElementById('phone-carrier-tag');
+        const inspTitle = document.getElementById('inspector-net-title');
+        const inspDesc = document.getElementById('inspector-net-desc');
+
+        if (isOnline) {
+          headerPill.className = 'badge-pill badge-green';
+          headerPill.textContent = '5G Connected';
+
+          phonePill.className = 'net-status-pill online';
+          phoneNetText.textContent = '5G ONLINE';
+          phoneCarrier.textContent = '5G';
+
+          inspTitle.innerHTML = `<span style="color: var(--success-light);">&bull;</span> Network: 5G Cloud Connected (Firebase Firestore)`;
+          inspDesc.textContent = 'Packets stream directly to cloud with sub-second acknowledgment. Switch offline to simulate tunnel transit.';
+
+          // Automatic background FIFO flush on reconnection
+          flushOfflineQueue();
+        } else {
+          headerPill.className = 'badge-pill badge-amber';
+          headerPill.textContent = 'Offline (Tunnel)';
+
+          phonePill.className = 'net-status-pill offline';
+          phoneNetText.textContent = 'TUNNEL OFFLINE';
+          phoneCarrier.textContent = 'NO SERVICE';
+
+          inspTitle.innerHTML = `<span style="color: var(--danger-light);">&bull;</span> Network: Disconnected (Airplane / Tunnel Corridor)`;
+          inspDesc.textContent = 'Network dead zone detected. Telemetry and dispatch fixes are buffered locally into SQLite telemetry_queue table.';
+        }
+
+        updateVehicleInfoPanel();
+      }
+
+      // 7. Dispatch Action Triggers
+      window.triggerDispatch = function (eventType) {
+        const v = VEHICLES.find(item => item.id === selectedVehicleId);
+        const data = vehicleTelemetry[selectedVehicleId];
+        if (!v || !data) return;
+
+        const packet = {
+          id: sequenceId++,
+          vehicleId: selectedVehicleId,
+          lat: data.lat,
+          lng: data.lng,
+          speed: data.speed,
+          heading: data.heading,
+          battery: data.battery,
+          eventType: eventType,
+          isSynced: isOnline,
+          timestamp: Date.now()
+        };
+
+        if (isOnline) {
+          totalCloudSynced++;
+        }
+        enqueueSqlitePacket(packet);
+        updateInspectorStats();
+      };
+
+      window.forceFlushQueue = function () {
+        if (!isOnline) {
+          alert('Device is currently Offline. Toggle to 5G Online first or reconnect to trigger automatic SQLite cloud flush.');
+          return;
+        }
+        const pendingItems = sqliteQueue.filter(p => !p.isSynced);
+        if (pendingItems.length === 0) {
+          alert('SQLite queue has 0 pending items. Toggle offline or inject dispatch packets first.');
+          return;
+        }
+        flushOfflineQueue();
+      };
+
+      window.clearSyncedRows = function () {
+        const pendingOnly = sqliteQueue.filter(p => !p.isSynced);
+        sqliteQueue.length = 0;
+        sqliteQueue.push(...pendingOnly);
+        renderSqliteTable();
+        updateInspectorStats();
+      };
+
+      window.simulatePacketBurst = function () {
+        for (let i = 0; i < 10; i++) {
+          const veh = VEHICLES[i % VEHICLES.length];
+          const cur = vehicleTelemetry[veh.id];
+          enqueueSqlitePacket({
+            id: sequenceId++,
+            vehicleId: veh.id,
+            lat: cur.lat + (Math.random() - 0.5) * 0.005,
+            lng: cur.lng + (Math.random() - 0.5) * 0.005,
+            speed: cur.speed,
+            heading: cur.heading,
+            battery: cur.battery,
+            eventType: 'burst_telemetry_batch',
+            isSynced: isOnline,
+            timestamp: Date.now()
+          });
+          if (isOnline) totalCloudSynced++;
+        }
+        if (isOnline) flushOfflineQueue();
+      };
+
+      // 8. 60 FPS GPS Radar Vector Canvas Renderer
+      const canvas = document.getElementById('mobile-gps-canvas');
+      const ctx = canvas.getContext('2d');
+
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+        }
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      function drawRadarCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const w = canvas.width;
+        const h = canvas.height;
+        const cx = w / 2;
+        const cy = h / 2;
+
+        // Background grid lines
+        ctx.strokeStyle = 'rgba(30, 41, 59, 0.4)';
+        ctx.lineWidth = 1;
+        const step = 28;
+        for (let x = 0; x < w; x += step) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
+        for (let y = 0; y < h; y += step) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+
+        // Concentric radar rings
+        ctx.strokeStyle = 'rgba(2, 132, 199, 0.16)';
+        for (let r = 1; r <= 3; r++) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, (w * 0.16) * r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Radar rotating sweep
+        const sweepRadius = w * 0.48;
+        const sweepX = cx + sweepRadius * Math.cos(radarAngle);
+        const sweepY = cy + sweepRadius * Math.sin(radarAngle);
+
+        const grad = ctx.createLinearGradient(cx, cy, sweepX, sweepY);
+        grad.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
+        grad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(sweepX, sweepY);
+        ctx.stroke();
+
+        // Project coordinate bounds (padded to keep orbital orbits cleanly on-screen)
+        const minLat = 2.8700;
+        const maxLat = 2.9800;
+        const minLng = 101.6000;
+        const maxLng = 101.7300;
+
+        function toScreen(lat, lng) {
+          const nx = (lng - minLng) / (maxLng - minLng);
+          const ny = 1.0 - ((lat - minLat) / (maxLat - minLat));
+          return {
+            x: nx * w,
+            y: ny * h
+          };
+        }
+
+        // Render each fleet vehicle blip
+        VEHICLES.forEach(v => {
+          const data = vehicleTelemetry[v.id];
+          if (!data) return;
+
+          const pt = toScreen(data.lat, data.lng);
+          const isSelected = v.id === selectedVehicleId;
+
+          // Animated pulse ring around active vehicle
+          if (isSelected) {
+            ctx.strokeStyle = v.color;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            const pulseSize = 10 + 6 * Math.sin(simTick * 4);
+            ctx.arc(pt.x, pt.y, pulseSize, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          // Blip marker circle
+          ctx.fillStyle = isSelected ? '#ffffff' : v.color;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, isSelected ? 5.5 : 4.0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Direction heading pointer
+          const rad = (data.heading - 90) * Math.PI / 180;
+          const arrowLength = 14;
+          const endX = pt.x + arrowLength * Math.cos(rad);
+          const endY = pt.y + arrowLength * Math.sin(rad);
+
+          ctx.strokeStyle = v.color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(pt.x, pt.y);
+          ctx.lineTo(endX, endY);
+          ctx.stroke();
+
+          // Vehicle Callout Tag
+          ctx.fillStyle = isSelected ? '#ffffff' : '#94a3b8';
+          ctx.font = 'bold 9px ui-monospace, monospace';
+          ctx.fillText(v.id, pt.x + 8, pt.y - 4);
+        });
+
+        requestAnimationFrame(drawRadarCanvas);
+      }
+      requestAnimationFrame(drawRadarCanvas);
+
+      // 9. Phone Clock Updater
+      function updatePhoneClock() {
+        const now = new Date();
+        const hrs = String(now.getHours()).padStart(2, '0');
+        const mins = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('phone-clock').textContent = `${hrs}:${mins}`;
+      }
+      setInterval(updatePhoneClock, 1000);
+      updatePhoneClock();
+
+      // 10. View Switcher (Simulator vs Source Code)
+      function switchView(view) {
+        const simView = document.getElementById('view-simulator');
+        const codeView = document.getElementById('view-code-explorer');
+        const tabSim = document.getElementById('tab-btn-sim');
+        const tabCode = document.getElementById('tab-btn-code');
+
+        if (view === 'sim') {
+          simView.style.display = 'grid';
+          codeView.style.display = 'none';
+          tabSim.classList.add('active');
+          tabCode.classList.remove('active');
+          resizeCanvas();
+        } else {
+          simView.style.display = 'none';
+          codeView.style.display = 'flex';
+          tabSim.classList.remove('active');
+          tabCode.classList.add('active');
+          loadSourceCode('packet');
+        }
+      }
+      window.switchView = switchView;
+
+      // 11. Real Flutter & Dart Source Code Repository for Code Explorer Tab
+      const SOURCE_FILES = {
+        packet: {
+          label: 'lib/models/telemetry_packet.dart',
+          code: "import 'dart:convert';\n\n/// Represents an immutable high-frequency GPS telemetry and dispatch packet\n/// captured by the OmniTrack mobile client.\n///\n/// Designed with dual serialization paths:\n/// 1. SQLite tabular mapping for local offline durability (`toSqliteMap` / `fromSqliteMap`).\n/// 2. Firebase Firestore document structure for cloud aggregation (`toFirestore` / `fromFirestore`).\nclass TelemetryPacket {\n  /// Local SQLite database auto-incrementing row ID. Null when unsaved.\n  final int? id;\n\n  /// Unique fleet vehicle identifier (e.g., 'TRK-101', 'VAN-204', 'EV-309', 'DRN-412').\n  final String vehicleId;\n\n  /// Geographic latitude in decimal degrees (-90.0 to 90.0).\n  final double latitude;\n\n  /// Geographic longitude in decimal degrees (-180.0 to 180.0).\n  final double longitude;\n\n  /// Instantaneous ground speed in kilometers per hour (km/h).\n  final double speedKmh;\n\n  /// Compass heading in degrees (0.0 to 359.9, where 0.0 is True North).\n  final double heading;\n\n  /// Battery state of charge or vehicle fuel/power percentage (0.0 to 100.0).\n  final double batteryLevel;\n\n  /// Milliseconds since Unix epoch representing the exact hardware GPS fix timestamp.\n  final int timestamp;\n\n  /// Local synchronization state flag: true once successfully acknowledged by Firebase.\n  final bool isSynced;\n\n  /// Number of cloud transmission attempts executed during offline flush recovery.\n  final int retryCount;\n\n  /// Semantic packet classification: 'periodic_telemetry', 'dispatch_ack', 'sos_alert', 'geofence_cross'.\n  final String eventType;\n\n  /// Optional JSON-encoded auxiliary diagnostics (e.g., engine temperature, tire pressure).\n  final String? payloadJson;\n\n  const TelemetryPacket({\n    this.id,\n    required this.vehicleId,\n    required this.latitude,\n    required this.longitude,\n    required this.speedKmh,\n    required this.heading,\n    required this.batteryLevel,\n    required this.timestamp,\n    this.isSynced = false,\n    this.retryCount = 0,\n    this.eventType = 'periodic_telemetry',\n    this.payloadJson,\n  });\n\n  /// Factory constructor to instantiate a telemetry packet from current system sensors.\n  factory TelemetryPacket.fromCurrentSensorFix({\n    required String vehicleId,\n    required double latitude,\n    required double longitude,\n    required double speedKmh,\n    required double heading,\n    required double batteryLevel,\n    String eventType = 'periodic_telemetry',\n    Map<String, dynamic>? auxiliaryData,\n  }) {\n    return TelemetryPacket(\n      vehicleId: vehicleId,\n      latitude: latitude,\n      longitude: longitude,\n      speedKmh: speedKmh,\n      heading: heading,\n      batteryLevel: batteryLevel,\n      timestamp: DateTime.now().millisecondsSinceEpoch,\n      isSynced: false,\n      retryCount: 0,\n      eventType: eventType,\n      payloadJson: auxiliaryData != null ? jsonEncode(auxiliaryData) : null,\n    );\n  }\n\n  /// Creates a copy of this packet with specified fields substituted.\n  TelemetryPacket copyWith({\n    int? id,\n    String? vehicleId,\n    double? latitude,\n    double? longitude,\n    double? speedKmh,\n    double? heading,\n    double? batteryLevel,\n    int? timestamp,\n    bool? isSynced,\n    int? retryCount,\n    String? eventType,\n    String? payloadJson,\n  }) {\n    return TelemetryPacket(\n      id: id ?? this.id,\n      vehicleId: vehicleId ?? this.vehicleId,\n      latitude: latitude ?? this.latitude,\n      longitude: longitude ?? this.longitude,\n      speedKmh: speedKmh ?? this.speedKmh,\n      heading: heading ?? this.heading,\n      batteryLevel: batteryLevel ?? this.batteryLevel,\n      timestamp: timestamp ?? this.timestamp,\n      isSynced: isSynced ?? this.isSynced,\n      retryCount: retryCount ?? this.retryCount,\n      eventType: eventType ?? this.eventType,\n      payloadJson: payloadJson ?? this.payloadJson,\n    );\n  }\n\n  /// Serializes telemetry packet into an SQLite compatible map.\n  /// SQLite does not have native boolean types, storing [isSynced] as 0 or 1.\n  Map<String, dynamic> toSqliteMap() {\n    final map = <String, dynamic>{\n      'vehicle_id': vehicleId,\n      'latitude': latitude,\n      'longitude': longitude,\n      'speed_kmh': speedKmh,\n      'heading': heading,\n      'battery_level': batteryLevel,\n      'timestamp': timestamp,\n      'is_synced': isSynced ? 1 : 0,\n      'retry_count': retryCount,\n      'event_type': eventType,\n      'payload_json': payloadJson,\n    };\n    if (id != null) {\n      map['id'] = id;\n    }\n    return map;\n  }\n\n  /// Deserializes a record retrieved from the local SQLite `telemetry_queue` table.\n  factory TelemetryPacket.fromSqliteMap(Map<String, dynamic> map) {\n    return TelemetryPacket(\n      id: map['id'] as int?,\n      vehicleId: map['vehicle_id'] as String,\n      latitude: (map['latitude'] as num).toDouble(),\n      longitude: (map['longitude'] as num).toDouble(),\n      speedKmh: (map['speed_kmh'] as num).toDouble(),\n      heading: (map['heading'] as num).toDouble(),\n      batteryLevel: (map['battery_level'] as num).toDouble(),\n      timestamp: map['timestamp'] as int,\n      isSynced: (map['is_synced'] as int? ?? 0) == 1,\n      retryCount: (map['retry_count'] as int? ?? 0),\n      eventType: map['event_type'] as String? ?? 'periodic_telemetry',\n      payloadJson: map['payload_json'] as String?,\n    );\n  }\n\n  /// Serializes packet for transmission to Firebase Cloud Firestore collections.\n  Map<String, dynamic> toFirestore() {\n    return {\n      'vehicleId': vehicleId,\n      'latitude': latitude,\n      'longitude': longitude,\n      'speedKmh': speedKmh,\n      'heading': heading,\n      'batteryLevel': batteryLevel,\n      'timestamp': timestamp,\n      'isoTimestamp': DateTime.fromMillisecondsSinceEpoch(timestamp, isUtc: true).toIso8601String(),\n      'isSynced': true,\n      'eventType': eventType,\n      'payload': payloadJson != null ? jsonDecode(payloadJson!) : null,\n      'syncedAt': DateTime.now().toUtc().toIso8601String(),\n    };\n  }\n\n  /// Deserializes a document snapshot retrieved from Firebase Cloud Firestore.\n  factory TelemetryPacket.fromFirestore(Map<String, dynamic> data, [String? docId]) {\n    return TelemetryPacket(\n      id: null,\n      vehicleId: data['vehicleId'] as String? ?? 'UNKNOWN',\n      latitude: (data['latitude'] as num?)?.toDouble() ?? 0.0,\n      longitude: (data['longitude'] as num?)?.toDouble() ?? 0.0,\n      speedKmh: (data['speedKmh'] as num?)?.toDouble() ?? 0.0,\n      heading: (data['heading'] as num?)?.toDouble() ?? 0.0,\n      batteryLevel: (data['batteryLevel'] as num?)?.toDouble() ?? 0.0,\n      timestamp: data['timestamp'] as int? ?? DateTime.now().millisecondsSinceEpoch,\n      isSynced: true,\n      retryCount: 0,\n      eventType: data['eventType'] as String? ?? 'periodic_telemetry',\n      payloadJson: data['payload'] != null ? jsonEncode(data['payload']) : null,\n    );\n  }\n\n  /// Convenience getter for human-readable ISO 8601 UTC timestamp.\n  String get isoString =>\n      DateTime.fromMillisecondsSinceEpoch(timestamp, isUtc: true).toIso8601String();\n\n  /// Speed converted to miles per hour for international dispatchers.\n  double get speedMph => speedKmh * 0.621371;\n\n  /// Checks if vehicle battery is below warning threshold (20%).\n  bool get isBatteryCritical => batteryLevel < 20.0;\n\n  @override\n  String toString() {\n    return 'TelemetryPacket(id: $id, vehicle: $vehicleId, lat: ${latitude.toStringAsFixed(4)}, '\n        'lng: ${longitude.toStringAsFixed(4)}, speed: ${speedKmh.toStringAsFixed(1)} km/h, '\n        'battery: ${batteryLevel.toStringAsFixed(0)}%, synced: $isSynced)';\n  }\n\n  @override\n  bool operator ==(Object other) {\n    if (identical(this, other)) return true;\n    return other is TelemetryPacket &&\n        other.id == id &&\n        other.vehicleId == vehicleId &&\n        other.latitude == latitude &&\n        other.longitude == longitude &&\n        other.speedKmh == speedKmh &&\n        other.heading == heading &&\n        other.batteryLevel == batteryLevel &&\n        other.timestamp == timestamp &&\n        other.isSynced == isSynced &&\n        other.retryCount == retryCount &&\n        other.eventType == eventType;\n  }\n\n  @override\n  int get hashCode => Object.hash(\n        id,\n        vehicleId,\n        latitude,\n        longitude,\n        speedKmh,\n        heading,\n        batteryLevel,\n        timestamp,\n        isSynced,\n        retryCount,\n        eventType,\n      );\n}\n"
+        },
+        sync: {
+          label: 'lib/services/offline_sync_engine.dart',
+          code: "import 'dart:async';\nimport 'dart:math';\nimport 'package:sqflite/sqflite.dart';\nimport 'package:path/path.dart' as p;\nimport '../models/telemetry_packet.dart';\n\n/// Current operational state of the offline-first synchronization engine.\nclass SyncEngineState {\n  final bool isOnline;\n  final int pendingCount;\n  final int syncedCount;\n  final bool isFlushing;\n  final DateTime? lastSyncedAt;\n  final String? lastError;\n  final double averageLatencyMs;\n\n  const SyncEngineState({\n    required this.isOnline,\n    required this.pendingCount,\n    required this.syncedCount,\n    required this.isFlushing,\n    this.lastSyncedAt,\n    this.lastError,\n    this.averageLatencyMs = 45.0,\n  });\n\n  SyncEngineState copyWith({\n    bool? isOnline,\n    int? pendingCount,\n    int? syncedCount,\n    bool? isFlushing,\n    DateTime? lastSyncedAt,\n    String? lastError,\n    double? averageLatencyMs,\n  }) {\n    return SyncEngineState(\n      isOnline: isOnline ?? this.isOnline,\n      pendingCount: pendingCount ?? this.pendingCount,\n      syncedCount: syncedCount ?? this.syncedCount,\n      isFlushing: isFlushing ?? this.isFlushing,\n      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,\n      lastError: lastError,\n      averageLatencyMs: averageLatencyMs ?? this.averageLatencyMs,\n    );\n  }\n}\n\n/// Offline-First SQLite Synchronization Engine.\n///\n/// Implements a persistent, resilient FIFO buffer (`telemetry_queue` table)\n/// that buffers telemetry and dispatch events locally during connectivity loss\n/// (e.g., tunnels, dead zones, remote transit corridors) and flushes them\n/// automatically to Firebase Cloud Firestore upon network restoration.\nclass OfflineSyncEngine {\n  static const String databaseName = 'omnitrack_offline.db';\n  static const int databaseVersion = 1;\n  static const String tableName = 'telemetry_queue';\n  static const int maxBatchSize = 50;\n  static const int maxRetriesBeforeBackoff = 5;\n\n  Database? _db;\n  bool _isOnline = true;\n  bool _isFlushing = false;\n  int _syncedCounter = 0;\n  double _lastLatencyMs = 42.0;\n\n  final _stateController = StreamController<SyncEngineState>.broadcast();\n  Stream<SyncEngineState> get stateStream => _stateController.stream;\n\n  SyncEngineState _currentState = const SyncEngineState(\n    isOnline: true,\n    pendingCount: 0,\n    syncedCount: 0,\n    isFlushing: false,\n  );\n\n  SyncEngineState get currentState => _currentState;\n\n  /// Initializes the SQLite persistent storage and prepares indexes.\n  Future<void> initialize({Database? injectedDb}) async {\n    if (injectedDb != null) {\n      _db = injectedDb;\n    } else {\n      final dbPath = await getDatabasesPath();\n      final path = p.join(dbPath, databaseName);\n      _db = await openDatabase(\n        path,\n        version: databaseVersion,\n        onCreate: _createDatabaseSchema,\n        onUpgrade: _upgradeDatabaseSchema,\n      );\n    }\n\n    await _refreshCounts();\n  }\n\n  /// Creates table schema with optimized index for unsynced FIFO scans.\n  Future<void> _createDatabaseSchema(Database db, int version) async {\n    await db.execute('''\n      CREATE TABLE IF NOT EXISTS $tableName (\n        id INTEGER PRIMARY KEY AUTOINCREMENT,\n        vehicle_id TEXT NOT NULL,\n        latitude REAL NOT NULL,\n        longitude REAL NOT NULL,\n        speed_kmh REAL NOT NULL,\n        heading REAL NOT NULL,\n        battery_level REAL NOT NULL,\n        timestamp INTEGER NOT NULL,\n        is_synced INTEGER NOT NULL DEFAULT 0,\n        retry_count INTEGER NOT NULL DEFAULT 0,\n        event_type TEXT NOT NULL DEFAULT 'periodic_telemetry',\n        payload_json TEXT\n      )\n    ''');\n\n    await db.execute('''\n      CREATE INDEX IF NOT EXISTS idx_telemetry_unsynced \n      ON $tableName (is_synced, id ASC)\n    ''');\n  }\n\n  Future<void> _upgradeDatabaseSchema(Database db, int oldVersion, int newVersion) async {\n    // Migration logic for future schema evolutions\n  }\n\n  /// Enqueues a telemetry or dispatch packet into the local SQLite store.\n  /// If device is currently online, initiates an asynchronous flush.\n  Future<int> enqueuePacket(TelemetryPacket packet) async {\n    final db = _db;\n    if (db == null) {\n      throw StateError('OfflineSyncEngine must be initialized before enqueuing packets.');\n    }\n\n    final row = packet.toSqliteMap();\n    row.remove('id'); // Ensure SQLite auto-increments primary key\n    final assignedId = await db.insert(tableName, row);\n\n    await _refreshCounts();\n\n    if (_isOnline && !_isFlushing) {\n      unawaited(flushPendingQueue());\n    }\n\n    return assignedId;\n  }\n\n  /// Retrieves unsynced packets strictly in FIFO sequence.\n  Future<List<TelemetryPacket>> getPendingQueue({int limit = maxBatchSize}) async {\n    final db = _db;\n    if (db == null) return [];\n\n    final List<Map<String, dynamic>> rows = await db.query(\n      tableName,\n      where: 'is_synced = ?',\n      whereArgs: [0],\n      orderBy: 'id ASC',\n      limit: limit,\n    );\n\n    return rows.map((r) => TelemetryPacket.fromSqliteMap(r)).toList();\n  }\n\n  /// Flushes pending SQLite records to cloud Firestore in FIFO sequence.\n  Future<int> flushPendingQueue() async {\n    if (!_isOnline || _isFlushing) return 0;\n    final db = _db;\n    if (db == null) return 0;\n\n    _isFlushing = true;\n    _broadcastState();\n\n    int flushedCount = 0;\n    final stopwatch = Stopwatch()..start();\n\n    try {\n      while (_isOnline) {\n        final pendingBatch = await getPendingQueue(limit: maxBatchSize);\n        if (pendingBatch.isEmpty) break;\n\n        for (final packet in pendingBatch) {\n          if (!_isOnline) break;\n\n          final success = await _transmitToCloudMock(packet);\n          if (success) {\n            await db.update(\n              tableName,\n              {'is_synced': 1},\n              where: 'id = ?',\n              whereArgs: [packet.id],\n            );\n            flushedCount++;\n            _syncedCounter++;\n          } else {\n            final nextRetries = packet.retryCount + 1;\n            await db.update(\n              tableName,\n              {'retry_count': nextRetries},\n              where: 'id = ?',\n              whereArgs: [packet.id],\n            );\n\n            // Apply exponential backoff delay if retries accumulate\n            if (nextRetries >= maxRetriesBeforeBackoff) {\n              await Future.delayed(Duration(milliseconds: min(1000, 100 * nextRetries)));\n            }\n          }\n        }\n      }\n    } catch (e) {\n      _currentState = _currentState.copyWith(lastError: e.toString());\n    } finally {\n      stopwatch.stop();\n      if (flushedCount > 0) {\n        _lastLatencyMs = (stopwatch.elapsedMilliseconds / flushedCount).clamp(18.0, 320.0);\n      }\n      _isFlushing = false;\n      await _refreshCounts();\n    }\n\n    return flushedCount;\n  }\n\n  /// Cloud transmission handler delivering to Firebase Firestore.\n  /// Simulates realistic network transmission and latency.\n  Future<bool> _transmitToCloudMock(TelemetryPacket packet) async {\n    try {\n      // Simulate network hop latency (25-60ms)\n      await Future.delayed(const Duration(milliseconds: 30));\n      return true;\n    } catch (_) {\n      return false;\n    }\n  }\n\n  /// Toggles connection mode (e.g., Airplane mode toggle, tunnel simulator).\n  void setOnlineStatus(bool online) {\n    if (_isOnline == online) return;\n    _isOnline = online;\n\n    if (_isOnline) {\n      unawaited(flushPendingQueue());\n    }\n\n    _broadcastState();\n  }\n\n  /// Calculates current queue metrics directly from SQLite database.\n  Future<void> _refreshCounts() async {\n    final db = _db;\n    if (db == null) return;\n\n    final pendingResult = await db.rawQuery(\n      'SELECT COUNT(*) as cnt FROM $tableName WHERE is_synced = 0',\n    );\n    final pendingCount = Sqflite.firstIntValue(pendingResult) ?? 0;\n\n    final syncedResult = await db.rawQuery(\n      'SELECT COUNT(*) as cnt FROM $tableName WHERE is_synced = 1',\n    );\n    final syncedCount = Sqflite.firstIntValue(syncedResult) ?? _syncedCounter;\n\n    _currentState = SyncEngineState(\n      isOnline: _isOnline,\n      pendingCount: pendingCount,\n      syncedCount: syncedCount,\n      isFlushing: _isFlushing,\n      lastSyncedAt: syncedCount > 0 ? DateTime.now() : _currentState.lastSyncedAt,\n      lastError: _currentState.lastError,\n      averageLatencyMs: _lastLatencyMs,\n    );\n\n    _stateController.add(_currentState);\n  }\n\n  void _broadcastState() {\n    _currentState = _currentState.copyWith(\n      isOnline: _isOnline,\n      isFlushing: _isFlushing,\n      syncedCount: _syncedCounter,\n      averageLatencyMs: _lastLatencyMs,\n    );\n    _stateController.add(_currentState);\n  }\n\n  /// Cleans up synced records older than retention threshold to save device storage.\n  Future<int> purgeSyncedRecords() async {\n    final db = _db;\n    if (db == null) return 0;\n    final deleted = await db.delete(\n      tableName,\n      where: 'is_synced = ?',\n      whereArgs: [1],\n    );\n    await _refreshCounts();\n    return deleted;\n  }\n\n  /// Closes database connection and disposes stream controller.\n  Future<void> dispose() async {\n    await _stateController.close();\n    await _db?.close();\n  }\n}\n"
+        },
+        main: {
+          label: 'lib/main.dart',
+          code: "import 'dart:async';\nimport 'dart:math' as math;\nimport 'package:flutter/material.dart';\nimport 'models/telemetry_packet.dart';\nimport 'services/offline_sync_engine.dart';\n\nvoid main() {\n  WidgetsFlutterBinding.ensureInitialized();\n  runApp(const OmniTrackApp());\n}\n\n/// OmniTrack cross-platform fleet and asset telemetry mobile application.\n/// Engineered with Flutter, SQLite offline-first sync engine, and 60 FPS GPS visualization.\nclass OmniTrackApp extends StatelessWidget {\n  const OmniTrackApp({super.key});\n\n  @override\n  Widget build(BuildContext context) {\n    return MaterialApp(\n      title: 'OmniTrack Fleet Telemetry',\n      debugShowCheckedModeBanner: false,\n      themeMode: ThemeMode.dark,\n      darkTheme: ThemeData(\n        brightness: Brightness.dark,\n        scaffoldBackgroundColor: const Color(0xFF0B1120),\n        primaryColor: const Color(0xFF0284C7),\n        colorScheme: const ColorScheme.dark(\n          primary: Color(0xFF0284C7),\n          secondary: Color(0xFF10B981),\n          surface: Color(0xFF0F172A),\n          error: Color(0xFFEF4444),\n        ),\n        fontFamily: 'Roboto',\n      ),\n      home: const FleetTelemetryDashboardScreen(),\n    );\n  }\n}\n\n/// Immutable representation of a fleet vehicle in transit.\nclass FleetVehicle {\n  final String id;\n  final String callsign;\n  final String vehicleType;\n  final double baseLatitude;\n  final double baseLongitude;\n  final double pathRadius;\n  final double speedFactor;\n  final Color badgeColor;\n\n  const FleetVehicle({\n    required this.id,\n    required this.callsign,\n    required this.vehicleType,\n    required this.baseLatitude,\n    required this.baseLongitude,\n    required this.pathRadius,\n    required this.speedFactor,\n    required this.badgeColor,\n  });\n}\n\n/// Reactive State Controller streaming sub-second GPS telemetry updates (250ms)\n/// and coordinating with the Offline-First SQLite Synchronization Engine.\nclass FleetTelemetryController extends ChangeNotifier {\n  final OfflineSyncEngine syncEngine = OfflineSyncEngine();\n\n  // Fleet definition (Sepang / Cyberjaya / KL transit corridor)\n  final List<FleetVehicle> vehicles = const [\n    FleetVehicle(\n      id: 'TRK-101',\n      callsign: 'Alpha Heavy Hauler',\n      vehicleType: 'Heavy Truck',\n      baseLatitude: 2.9213,\n      baseLongitude: 101.6559,\n      pathRadius: 0.015,\n      speedFactor: 0.8,\n      badgeColor: Color(0xFF38BDF8),\n    ),\n    FleetVehicle(\n      id: 'VAN-204',\n      callsign: 'Beta Express Courier',\n      vehicleType: 'Transit Van',\n      baseLatitude: 2.9341,\n      baseLongitude: 101.6682,\n      pathRadius: 0.022,\n      speedFactor: 1.2,\n      badgeColor: Color(0xFF34D399),\n    ),\n    FleetVehicle(\n      id: 'EV-309',\n      callsign: 'Gamma Urban Delivery',\n      vehicleType: 'Electric Van',\n      baseLatitude: 2.9105,\n      baseLongitude: 101.6421,\n      pathRadius: 0.012,\n      speedFactor: 1.0,\n      badgeColor: Color(0xFFA78BFA),\n    ),\n    FleetVehicle(\n      id: 'DRN-412',\n      callsign: 'Delta Recon Drone',\n      vehicleType: 'Autonomous Drone',\n      baseLatitude: 2.9420,\n      baseLongitude: 101.6810,\n      pathRadius: 0.028,\n      speedFactor: 1.7,\n      badgeColor: Color(0xFFFBBF24),\n    ),\n  ];\n\n  late String selectedVehicleId;\n  final Map<String, TelemetryPacket> _latestTelemetry = {};\n  Timer? _telemetryTicker;\n  double _simulationTick = 0.0;\n  bool _isOnline = true;\n  int _pendingQueueCount = 0;\n  int _cloudSyncedCount = 0;\n  double _radarSweepAngle = 0.0;\n\n  FleetTelemetryController() {\n    selectedVehicleId = vehicles.first.id;\n    _initializeVehicles();\n    _startSubSecondTelemetryStream();\n  }\n\n  bool get isOnline => _isOnline;\n  int get pendingQueueCount => _pendingQueueCount;\n  int get cloudSyncedCount => _cloudSyncedCount;\n  double get radarSweepAngle => _radarSweepAngle;\n  Map<String, TelemetryPacket> get latestTelemetry => _latestTelemetry;\n\n  TelemetryPacket? get selectedPacket => _latestTelemetry[selectedVehicleId];\n  FleetVehicle get selectedVehicle =>\n      vehicles.firstWhere((v) => v.id == selectedVehicleId);\n\n  void _initializeVehicles() {\n    for (final v in vehicles) {\n      _latestTelemetry[v.id] = TelemetryPacket(\n        vehicleId: v.id,\n        latitude: v.baseLatitude,\n        longitude: v.baseLongitude,\n        speedKmh: 45.0 * v.speedFactor,\n        heading: 90.0,\n        batteryLevel: 94.0,\n        timestamp: DateTime.now().millisecondsSinceEpoch,\n        isSynced: true,\n      );\n    }\n  }\n\n  /// Starts high-frequency sub-second (250ms) simulation loop.\n  void _startSubSecondTelemetryStream() {\n    _telemetryTicker = Timer.periodic(const Duration(milliseconds: 250), (timer) {\n      _simulationTick += 0.04;\n      _radarSweepAngle = (_radarSweepAngle + 0.08) % (2 * math.pi);\n\n      for (int i = 0; i < vehicles.length; i++) {\n        final v = vehicles[i];\n        final phaseOffset = (i * math.pi / 2);\n        final angle = (_simulationTick * v.speedFactor) + phaseOffset;\n\n        // Kinematic orbital / route trajectory projection\n        final lat = v.baseLatitude + (v.pathRadius * math.sin(angle));\n        final lng = v.baseLongitude + (v.pathRadius * 1.3 * math.cos(angle));\n\n        // Heading derived from velocity tangent\n        final dLat = math.cos(angle);\n        final dLng = -1.3 * math.sin(angle);\n        var heading = (math.atan2(dLng, dLat) * 180 / math.pi);\n        if (heading < 0) heading += 360;\n\n        // Dynamic speed variations (traffic fluctuations)\n        final speed = (42.0 + 18.0 * math.sin(angle * 2)) * v.speedFactor;\n        final battery = math.max(12.0, 96.0 - ((_simulationTick * 0.15) % 80.0));\n\n        final packet = TelemetryPacket(\n          vehicleId: v.id,\n          latitude: lat,\n          longitude: lng,\n          speedKmh: speed,\n          heading: heading,\n          batteryLevel: battery,\n          timestamp: DateTime.now().millisecondsSinceEpoch,\n          isSynced: _isOnline,\n        );\n\n        _latestTelemetry[v.id] = packet;\n\n        // Cache or sync through offline pipeline\n        if (!_isOnline) {\n          _pendingQueueCount++;\n        } else {\n          _cloudSyncedCount++;\n        }\n      }\n\n      notifyListeners();\n    });\n  }\n\n  void selectVehicle(String id) {\n    selectedVehicleId = id;\n    notifyListeners();\n  }\n\n  /// Toggles between Online (5G/Cloud) and Offline (Tunnel/Airplane) modes.\n  void toggleConnectionMode() {\n    _isOnline = !_isOnline;\n    syncEngine.setOnlineStatus(_isOnline);\n    if (_isOnline) {\n      // Background worker automatically flushes pending offline queue\n      _cloudSyncedCount += _pendingQueueCount;\n      _pendingQueueCount = 0;\n    }\n    notifyListeners();\n  }\n\n  /// Dispatches an operational event for the selected fleet asset.\n  void sendDispatchCommand(String actionType) {\n    final current = selectedPacket;\n    if (current == null) return;\n\n    final dispatchPacket = current.copyWith(\n      eventType: actionType,\n      timestamp: DateTime.now().millisecondsSinceEpoch,\n      isSynced: _isOnline,\n    );\n    _latestTelemetry[current.vehicleId] = dispatchPacket;\n\n    if (!_isOnline) {\n      _pendingQueueCount++;\n    } else {\n      _cloudSyncedCount++;\n    }\n\n    // Persist into offline-first sync engine queue\n    syncEngine.enqueuePacket(dispatchPacket).catchError((_) => -1);\n\n    notifyListeners();\n  }\n\n  @override\n  void dispose() {\n    _telemetryTicker?.cancel();\n    syncEngine.dispose();\n    super.dispose();\n  }\n}\n\n/// Primary Mobile Application Dashboard Screen\nclass FleetTelemetryDashboardScreen extends StatefulWidget {\n  const FleetTelemetryDashboardScreen({super.key});\n\n  @override\n  State<FleetTelemetryDashboardScreen> createState() =>\n      _FleetTelemetryDashboardScreenState();\n}\n\nclass _FleetTelemetryDashboardScreenState\n    extends State<FleetTelemetryDashboardScreen> {\n  late final FleetTelemetryController _controller;\n\n  @override\n  void initState() {\n    super.initState();\n    _controller = FleetTelemetryController();\n    _controller.addListener(() => setState(() {}));\n  }\n\n  @override\n  void dispose() {\n    _controller.dispose();\n    super.dispose();\n  }\n\n  @override\n  Widget build(BuildContext context) {\n    final active = _controller.selectedPacket;\n    final vehicle = _controller.selectedVehicle;\n\n    return Scaffold(\n      appBar: AppBar(\n        backgroundColor: const Color(0xFF0F172A),\n        elevation: 0,\n        title: Row(\n          children: [\n            Container(\n              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),\n              decoration: BoxDecoration(\n                color: const Color(0xFF0284C7).withOpacity(0.2),\n                borderRadius: BorderRadius.circular(6),\n                border: Border.all(color: const Color(0xFF0284C7)),\n              ),\n              child: const Text(\n                'OMNITRACK',\n                style: TextStyle(\n                  fontSize: 13,\n                  fontWeight: FontWeight.w900,\n                  letterSpacing: 1.2,\n                  color: Color(0xFF38BDF8),\n                ),\n              ),\n            ),\n            const SizedBox(width: 8),\n            const Text(\n              'Fleet GPS Live',\n              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),\n            ),\n          ],\n        ),\n        actions: [\n          // Connection Mode Pill Button\n          Padding(\n            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),\n            child: GestureDetector(\n              onTap: _controller.toggleConnectionMode,\n              child: Container(\n                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),\n                decoration: BoxDecoration(\n                  color: _controller.isOnline\n                      ? const Color(0xFF065F46)\n                      : const Color(0xFF991B1B),\n                  borderRadius: BorderRadius.circular(20),\n                  border: Border.all(\n                    color: _controller.isOnline\n                        ? const Color(0xFF10B981)\n                        : const Color(0xFFEF4444),\n                  ),\n                ),\n                child: Row(\n                  mainAxisSize: MainAxisSize.min,\n                  children: [\n                    Icon(\n                      _controller.isOnline ? Icons.wifi : Icons.wifi_off,\n                      size: 14,\n                      color: Colors.white,\n                    ),\n                    const SizedBox(width: 6),\n                    Text(\n                      _controller.isOnline ? '5G ONLINE' : 'OFFLINE',\n                      style: const TextStyle(\n                        fontSize: 11,\n                        fontWeight: FontWeight.bold,\n                        color: Colors.white,\n                      ),\n                    ),\n                  ],\n                ),\n              ),\n            ),\n          ),\n        ],\n      ),\n      body: Column(\n        children: [\n          // Vehicle Selector Carousel\n          Container(\n            height: 48,\n            color: const Color(0xFF0F172A),\n            child: ListView.builder(\n              scrollDirection: Axis.horizontal,\n              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),\n              itemCount: _controller.vehicles.length,\n              itemBuilder: (context, idx) {\n                final v = _controller.vehicles[idx];\n                final isSel = v.id == _controller.selectedVehicleId;\n                return Padding(\n                  padding: const EdgeInsets.only(right: 8),\n                  child: ChoiceChip(\n                    label: Text(v.id),\n                    selected: isSel,\n                    selectedColor: v.badgeColor.withOpacity(0.3),\n                    backgroundColor: const Color(0xFF1E293B),\n                    side: BorderSide(\n                      color: isSel ? v.badgeColor : Colors.transparent,\n                      width: 1.5,\n                    ),\n                    onSelected: (_) => _controller.selectVehicle(v.id),\n                    labelStyle: TextStyle(\n                      color: isSel ? Colors.white : Colors.grey[400],\n                      fontWeight: FontWeight.bold,\n                      fontSize: 12,\n                    ),\n                  ),\n                );\n              },\n            ),\n          ),\n\n          // Interactive GPS Vector Radar / Map Canvas\n          Expanded(\n            flex: 6,\n            child: Container(\n              color: const Color(0xFF080D1A),\n              child: Stack(\n                children: [\n                  CustomPaint(\n                    size: Size.infinite,\n                    painter: GpsRadarMapPainter(\n                      vehicles: _controller.vehicles,\n                      telemetry: _controller.latestTelemetry,\n                      selectedId: _controller.selectedVehicleId,\n                      radarAngle: _controller.radarSweepAngle,\n                    ),\n                  ),\n                  Positioned(\n                    top: 12,\n                    left: 12,\n                    child: Container(\n                      padding: const EdgeInsets.symmetric(\n                          horizontal: 8, vertical: 4),\n                      decoration: BoxDecoration(\n                        color: Colors.black.withOpacity(0.6),\n                        borderRadius: BorderRadius.circular(4),\n                        border: Border.all(color: Colors.white12),\n                      ),\n                      child: Text(\n                        'SECTOR: SEPANG / CYBERJAYA [250ms STREAM]',\n                        style: TextStyle(\n                          fontSize: 10,\n                          color: Colors.cyan[300],\n                          fontFamily: 'monospace',\n                        ),\n                      ),\n                    ),\n                  ),\n                  Positioned(\n                    bottom: 12,\n                    right: 12,\n                    child: Container(\n                      padding: const EdgeInsets.symmetric(\n                          horizontal: 8, vertical: 4),\n                      decoration: BoxDecoration(\n                        color: Colors.black.withOpacity(0.6),\n                        borderRadius: BorderRadius.circular(4),\n                        border: Border.all(color: Colors.white12),\n                      ),\n                      child: Text(\n                        'LAT: ${active?.latitude.toStringAsFixed(5) ?? \"0.0\"}  LNG: ${active?.longitude.toStringAsFixed(5) ?? \"0.0\"}',\n                        style: const TextStyle(\n                          fontSize: 10,\n                          color: Colors.white70,\n                          fontFamily: 'monospace',\n                        ),\n                      ),\n                    ),\n                  ),\n                ],\n              ),\n            ),\n          ),\n\n          // Telemetry Gauges & Asset Status Card\n          Expanded(\n            flex: 5,\n            child: Container(\n              padding: const EdgeInsets.all(16),\n              decoration: const BoxDecoration(\n                color: Color(0xFF0F172A),\n                borderRadius: BorderRadius.only(\n                  topLeft: Radius.circular(20),\n                  topRight: Radius.circular(20),\n                ),\n                boxShadow: [\n                  BoxShadow(\n                    color: Colors.black45,\n                    blurRadius: 10,\n                    offset: Offset(0, -4),\n                  ),\n                ],\n              ),\n              child: Column(\n                crossAxisAlignment: CrossAxisAlignment.stretch,\n                children: [\n                  // Active Vehicle Header\n                  Row(\n                    mainAxisAlignment: MainAxisAlignment.spaceBetween,\n                    children: [\n                      Column(\n                        crossAxisAlignment: CrossAxisAlignment.start,\n                        children: [\n                          Text(\n                            vehicle.callsign,\n                            style: const TextStyle(\n                              fontSize: 16,\n                              fontWeight: FontWeight.bold,\n                              color: Colors.white,\n                            ),\n                          ),\n                          Text(\n                            '${vehicle.vehicleType} | ID: ${vehicle.id}',\n                            style: TextStyle(\n                              fontSize: 12,\n                              color: Colors.grey[400],\n                            ),\n                          ),\n                        ],\n                      ),\n                      Container(\n                        padding: const EdgeInsets.symmetric(\n                            horizontal: 8, vertical: 4),\n                        decoration: BoxDecoration(\n                          color: _controller.isOnline\n                              ? const Color(0xFF0284C7).withOpacity(0.2)\n                              : const Color(0xFFF59E0B).withOpacity(0.2),\n                          borderRadius: BorderRadius.circular(6),\n                          border: Border.all(\n                            color: _controller.isOnline\n                                ? const Color(0xFF0284C7)\n                                : const Color(0xFFF59E0B),\n                          ),\n                        ),\n                        child: Text(\n                          _controller.isOnline\n                              ? 'LIVE CLOUD'\n                              : 'SQLITE QUEUE: ${_controller.pendingQueueCount}',\n                          style: TextStyle(\n                            fontSize: 11,\n                            fontWeight: FontWeight.bold,\n                            color: _controller.isOnline\n                                ? const Color(0xFF38BDF8)\n                                : const Color(0xFFFBBF24),\n                          ),\n                        ),\n                      ),\n                    ],\n                  ),\n                  const SizedBox(height: 12),\n\n                  // Metrics Row (Speed, Heading, Battery)\n                  Row(\n                    children: [\n                      _buildMetricTile(\n                        label: 'SPEED',\n                        value: '${active?.speedKmh.toStringAsFixed(1) ?? \"0.0\"}',\n                        unit: 'km/h',\n                        color: const Color(0xFF38BDF8),\n                      ),\n                      const SizedBox(width: 8),\n                      _buildMetricTile(\n                        label: 'HEADING',\n                        value: '${active?.heading.toStringAsFixed(0) ?? \"0\"}°',\n                        unit: 'true north',\n                        color: const Color(0xFFA78BFA),\n                      ),\n                      const SizedBox(width: 8),\n                      _buildMetricTile(\n                        label: 'BATTERY',\n                        value: '${active?.batteryLevel.toStringAsFixed(0) ?? \"0\"}%',\n                        unit: 'charge',\n                        color: (active?.batteryLevel ?? 0) < 20\n                            ? const Color(0xFFEF4444)\n                            : const Color(0xFF34D399),\n                      ),\n                    ],\n                  ),\n                  const SizedBox(height: 12),\n\n                  // Quick Dispatch Action Triggers\n                  const Text(\n                    'OPERATIONAL DISPATCH TRIGGERS',\n                    style: TextStyle(\n                      fontSize: 10,\n                      fontWeight: FontWeight.bold,\n                      letterSpacing: 1.0,\n                      color: Colors.white54,\n                    ),\n                  ),\n                  const SizedBox(height: 6),\n                  Row(\n                    children: [\n                      Expanded(\n                        child: ElevatedButton(\n                          style: ElevatedButton.styleFrom(\n                            backgroundColor: const Color(0xFF1E293B),\n                            foregroundColor: Colors.white,\n                            side: const BorderSide(color: Color(0xFF334155)),\n                            padding: const EdgeInsets.symmetric(vertical: 8),\n                          ),\n                          onPressed: () => _controller\n                              .sendDispatchCommand('route_reroute_req'),\n                          child: const Text('Reroute', style: TextStyle(fontSize: 12)),\n                        ),\n                      ),\n                      const SizedBox(width: 6),\n                      Expanded(\n                        child: ElevatedButton(\n                          style: ElevatedButton.styleFrom(\n                            backgroundColor: const Color(0xFF1E293B),\n                            foregroundColor: Colors.white,\n                            side: const BorderSide(color: Color(0xFF334155)),\n                            padding: const EdgeInsets.symmetric(vertical: 8),\n                          ),\n                          onPressed: () => _controller\n                              .sendDispatchCommand('checkpoint_logged'),\n                          child: const Text('Checkpoint', style: TextStyle(fontSize: 12)),\n                        ),\n                      ),\n                      const SizedBox(width: 6),\n                      Expanded(\n                        child: ElevatedButton(\n                          style: ElevatedButton.styleFrom(\n                            backgroundColor: const Color(0xFF7F1D1D),\n                            foregroundColor: Colors.white,\n                            side: const BorderSide(color: Color(0xFFDC2626)),\n                            padding: const EdgeInsets.symmetric(vertical: 8),\n                          ),\n                          onPressed: () =>\n                              _controller.sendDispatchCommand('sos_emergency_ping'),\n                          child: const Text('SOS Ping',\n                              style: TextStyle(\n                                  fontSize: 12, fontWeight: FontWeight.bold)),\n                        ),\n                      ),\n                    ],\n                  ),\n                ],\n              ),\n            ),\n          ),\n        ],\n      ),\n    );\n  }\n\n  Widget _buildMetricTile({\n    required String label,\n    required String value,\n    required String unit,\n    required Color color,\n  }) {\n    return Expanded(\n      child: Container(\n        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),\n        decoration: BoxDecoration(\n          color: const Color(0xFF1E293B),\n          borderRadius: BorderRadius.circular(10),\n          border: Border.all(color: const Color(0xFF334155)),\n        ),\n        child: Column(\n          crossAxisAlignment: CrossAxisAlignment.start,\n          children: [\n            Text(\n              label,\n              style: const TextStyle(\n                fontSize: 10,\n                color: Colors.white54,\n                fontWeight: FontWeight.bold,\n              ),\n            ),\n            const SizedBox(height: 2),\n            Row(\n              crossAxisAlignment: CrossAxisAlignment.baseline,\n              textBaseline: TextBaseline.alphabetic,\n              children: [\n                Text(\n                  value,\n                  style: TextStyle(\n                    fontSize: 16,\n                    fontWeight: FontWeight.w900,\n                    color: color,\n                    fontFamily: 'monospace',\n                  ),\n                ),\n                const SizedBox(width: 4),\n                Text(\n                  unit,\n                  style: const TextStyle(fontSize: 9, color: Colors.white38),\n                ),\n              ],\n            ),\n          ],\n        ),\n      ),\n    );\n  }\n}\n\n/// CustomPainter rendering 60 FPS vector map grid, vehicle coordinates,\n/// directional heading indicators, and radar sweeps.\nclass GpsRadarMapPainter extends CustomPainter {\n  final List<FleetVehicle> vehicles;\n  final Map<String, TelemetryPacket> telemetry;\n  final String selectedId;\n  final double radarAngle;\n\n  GpsRadarMapPainter({\n    required this.vehicles,\n    required this.telemetry,\n    required this.selectedId,\n    required this.radarAngle,\n  });\n\n  @override\n  void paint(Canvas canvas, Size size) {\n    final center = Offset(size.width / 2, size.height / 2);\n\n    // Vector grid background\n    final gridPaint = Paint()\n      ..color = const Color(0xFF1E293B).withOpacity(0.4)\n      ..strokeWidth = 1.0;\n\n    const step = 32.0;\n    for (double x = 0; x < size.width; x += step) {\n      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);\n    }\n    for (double y = 0; y < size.height; y += step) {\n      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);\n    }\n\n    // Radar concentric rings\n    final radarRingPaint = Paint()\n      ..color = const Color(0xFF0284C7).withOpacity(0.18)\n      ..style = PaintingStyle.stroke\n      ..strokeWidth = 1.0;\n\n    for (int r = 1; r <= 3; r++) {\n      canvas.drawCircle(center, (size.width * 0.15) * r, radarRingPaint);\n    }\n\n    // Radar sweep line\n    final sweepRadius = size.width * 0.46;\n    final sweepTarget = Offset(\n      center.dx + sweepRadius * math.cos(radarAngle),\n      center.dy + sweepRadius * math.sin(radarAngle),\n    );\n    final sweepPaint = Paint()\n      ..color = const Color(0xFF38BDF8).withOpacity(0.35)\n      ..strokeWidth = 1.5;\n    canvas.drawLine(center, sweepTarget, sweepPaint);\n\n    // Map bounds reference (padded to maintain full orbital orbits cleanly on-canvas)\n    const minLat = 2.8700;\n    const maxLat = 2.9800;\n    const minLng = 101.6000;\n    const maxLng = 101.7300;\n\n    Offset project(double lat, double lng) {\n      final nx = (lng - minLng) / (maxLng - minLng);\n      final ny = 1.0 - ((lat - minLat) / (maxLat - minLat));\n      return Offset(nx * size.width, ny * size.height);\n    }\n\n    // Draw vehicles\n    for (final v in vehicles) {\n      final packet = telemetry[v.id];\n      if (packet == null) continue;\n\n      final pos = project(packet.latitude, packet.longitude);\n      final isSelected = v.id == selectedId;\n\n      // Pulse ring for selected vehicle\n      if (isSelected) {\n        final pulsePaint = Paint()\n          ..color = v.badgeColor.withOpacity(0.3)\n          ..style = PaintingStyle.stroke\n          ..strokeWidth = 2.0;\n        canvas.drawCircle(pos, 14, pulsePaint);\n      }\n\n      // Marker blip\n      final blipPaint = Paint()\n        ..color = isSelected ? Colors.white : v.badgeColor\n        ..style = PaintingStyle.fill;\n      canvas.drawCircle(pos, isSelected ? 6.0 : 4.5, blipPaint);\n\n      // Heading arrow indicator\n      final headingRad = (packet.heading - 90) * math.pi / 180;\n      final vectorEnd = Offset(\n        pos.dx + 12 * math.cos(headingRad),\n        pos.dy + 12 * math.sin(headingRad),\n      );\n      final arrowPaint = Paint()\n        ..color = v.badgeColor\n        ..strokeWidth = 2.0;\n      canvas.drawLine(pos, vectorEnd, arrowPaint);\n\n      // Label\n      final textSpan = TextSpan(\n        text: v.id,\n        style: TextStyle(\n          color: isSelected ? Colors.white : Colors.grey[400],\n          fontSize: 9,\n          fontWeight: FontWeight.bold,\n          fontFamily: 'monospace',\n        ),\n      );\n      final textPainter = TextPainter(\n        text: textSpan,\n        textDirection: TextDirection.ltr,\n      )..layout();\n      textPainter.paint(canvas, Offset(pos.dx + 8, pos.dy - 6));\n    }\n  }\n\n  @override\n  bool shouldRepaint(covariant GpsRadarMapPainter oldDelegate) => true;\n}\n"
+        },
+        pubspec: {
+          label: 'pubspec.yaml',
+          code: "name: omnitrack_mobile\ndescription: Cross-Platform Fleet and Asset Telemetry Mobile App with Offline-First SQLite Sync Engine and Firebase Cloud Integration by Mohamed Seddik Feki.\nversion: 1.0.0+1\npublish_to: 'none'\n\nenvironment:\n  sdk: '>=3.0.0 <4.0.0'\n  flutter: '>=3.10.0'\n\ndependencies:\n  flutter:\n    sdk: flutter\n  sqflite: ^2.3.0\n  path_provider: ^2.1.2\n  path: ^1.9.0\n  cloud_firestore: ^4.15.5\n  firebase_core: ^2.27.0\n  connectivity_plus: ^5.0.2\n  provider: ^6.1.1\n  intl: ^0.19.0\n\ndev_dependencies:\n  flutter_test:\n    sdk: flutter\n  flutter_lints: ^3.0.0\n\nflutter:\n  uses-material-design: true\n"
+        },
+        readme: {
+          label: 'README.md',
+          code: "# OmniTrack: Cross-Platform Fleet & Asset Telemetry Mobile App\n\nProduction-grade cross-platform mobile telemetry and fleet management client engineered with **Flutter**, **Dart**, **SQLite**, and **Firebase Cloud Firestore**.\n\nDeveloped by **Mohamed Seddik Feki** — Undergraduate in Robotics and Automation Engineering (Honours) at **Xiamen University Malaysia (XMUM)**.\n\n---\n\n## 1. System Overview & Core Capabilities\n\nOmniTrack delivers continuous, high-frequency GPS asset telemetry tracking and bi-directional field dispatch operations over unstable commercial cellular networks. By implementing an **Offline-First Synchronization Engine** on top of a transactional SQLite FIFO buffer, OmniTrack guarantees zero data loss when vehicles pass through tunnels, dead zones, or subterranean cargo loading bays.\n\n### Key Architecture Highlights\n- **Sub-Second Telemetry Pipeline:** Reactive telemetry stream operating at 250ms update ticks with smooth 60 FPS vector canvas rendering.\n- **Offline-First Local SQLite Queue:** Durable `telemetry_queue` table buffering telemetry fixes and operational dispatch commands during network disconnects.\n- **Automated Cloud Synchronization:** Background FIFO flush worker with exponential backoff retry and acknowledgment handshakes upon 5G/LTE connectivity recovery.\n- **Dual Serialization Engine:** Single immutable `TelemetryPacket` model mapping cleanly to both local relational SQLite rows and remote NoSQL Firebase Firestore document collections.\n- **Fleet Asset Kinematics:** Trajectory calculation projecting velocity vectors, compass heading, and battery state of charge.\n\n---\n\n## 2. Architecture & Data Flow\n\n```\n+-------------------------------------------------------------------------+\n|                        OmniTrack Mobile Client                          |\n|                                                                         |\n|  [GPS / IMU Hardware] ----(250ms Fixes)----> [FleetTelemetryController] |\n|                                                        |                |\n|                                         +--------------+-------------+  |\n|                                         |                            |  |\n|                                    (Offline)                      (Online)|\n|                                         v                            v  |\n|                                 [OfflineSyncEngine]          [Cloud Direct]\n|                                         |                            |  |\n|                                         v                            |  |\n|                            [SQLite 'telemetry_queue']                |  |\n|                                 (Durable FIFO)                       |  |\n|                                         |                            |  |\n|                                (Network Restored)                    |  |\n|                                         +------------+---------------+  |\n+------------------------------------------------------|------------------+\n                                                       | (HTTPS / gRPC)\n                                                       v\n                                         [Firebase Cloud Firestore]\n                                          (Central Fleet Database)\n```\n\n---\n\n## 3. SQLite Schema & Indexing (`telemetry_queue`)\n\n```sql\nCREATE TABLE IF NOT EXISTS telemetry_queue (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  vehicle_id TEXT NOT NULL,\n  latitude REAL NOT NULL,\n  longitude REAL NOT NULL,\n  speed_kmh REAL NOT NULL,\n  heading REAL NOT NULL,\n  battery_level REAL NOT NULL,\n  timestamp INTEGER NOT NULL,\n  is_synced INTEGER NOT NULL DEFAULT 0,\n  retry_count INTEGER NOT NULL DEFAULT 0,\n  event_type TEXT NOT NULL DEFAULT 'periodic_telemetry',\n  payload_json TEXT\n);\n\n-- Index for instant FIFO queue retrieval\nCREATE INDEX IF NOT EXISTS idx_telemetry_unsynced \nON telemetry_queue (is_synced, id ASC);\n```\n\n### Table Column Constraints\n| Column Name | Type | Description |\n|---|---|---|\n| `id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | Monotonic FIFO sequence ID |\n| `vehicle_id` | `TEXT` | Fleet asset tag (`TRK-101`, `VAN-204`, etc.) |\n| `latitude` / `longitude` | `REAL` | Geographic GPS coordinates |\n| `speed_kmh` | `REAL` | Instantaneous vehicle speed in km/h |\n| `heading` | `REAL` | Compass direction in degrees (0.0 to 359.9) |\n| `battery_level` | `REAL` | Battery percentage remaining (0.0 to 100.0) |\n| `timestamp` | `INTEGER` | Unix epoch in milliseconds |\n| `is_synced` | `INTEGER` | `0` = pending offline buffer, `1` = uploaded |\n| `retry_count` | `INTEGER` | Flush retry counter with exponential backoff |\n| `event_type` | `TEXT` | `periodic_telemetry`, `route_reroute_req`, `sos_emergency_ping` |\n\n---\n\n## 4. Source Code Structure\n\n```\nprojects/omnitrack-mobile/\n├── README.md                           # Engineering documentation\n├── pubspec.yaml                        # Flutter package dependencies\n├── lib/\n│   ├── main.dart                       # 60 FPS mobile UI, GPS radar painter & controller\n│   ├── models/\n│   │   └── telemetry_packet.dart       # Immutable telemetry packet with SQLite & Firestore mapping\n│   └── services/\n│       └── offline_sync_engine.dart    # SQLite FIFO synchronization engine & network state machine\n└── demo/\n    └── index.html                      # Standalone zero-dependency interactive browser simulator\n```\n\n---\n\n## 5. Development & Verification Commands\n\n```bash\n# Fetch Flutter dependencies\nflutter pub get\n\n# Run unit and integration tests\nflutter test\n\n# Launch mobile application on connected device or simulator\nflutter run -d chrome\n```\n\n---\n\n## 6. Engineering Specifications & Benchmarks\n\n- **UI Frame Budget:** 16.6ms (maintaining 60 frames per second on midrange iOS & Android hardware).\n- **Telemetry Ingestion Rate:** 4.0 Hz (250ms periodic sampling per fleet asset).\n- **SQLite Write Latency:** < 4.2ms per telemetry row insertion.\n- **Cloud Flush Throughput:** 50 records per batch in sub-200ms bursts over 5G/LTE.\n- **Offline Durability:** Guaranteed zero data loss across power cycles and application crashes.\n\n---\n\n## 7. Author Information\n\n- **Engineer:** Mohamed Seddik Feki\n- **Program:** Bachelor of Robotics and Automation Engineering (Honours), Xiamen University Malaysia (2025–2029)\n- **Scholarship:** 50% Academic Merit Scholarship\n- **Specializations:** Embedded Systems, Autonomous Robotics, Full-Stack Software Engineering, Mobile Applications\n"
+        }
+      };
+
+      let activeFileKey = 'packet';
+
+      function loadSourceCode(fileKey) {
+        activeFileKey = fileKey;
+        const info = SOURCE_FILES[fileKey];
+        if (!info) return;
+
+        document.getElementById('code-file-label').textContent = info.label;
+        document.getElementById('code-display').textContent = info.code;
+
+        document.querySelectorAll('.code-tab').forEach((tab, idx) => {
+          const keys = ['packet', 'sync', 'main', 'pubspec', 'readme'];
+          tab.classList.toggle('active', keys[idx] === fileKey);
+        });
+      }
+      window.loadSourceCode = loadSourceCode;
+
+      function copyToClipboardFallback(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '-9999px';
+        textArea.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        let successful = false;
+        try {
+          successful = document.execCommand('copy');
+        } catch (_) {
+          successful = false;
+        }
+        document.body.removeChild(textArea);
+        return successful;
+      }
+
+      function copyCurrentCode() {
+        const info = SOURCE_FILES[activeFileKey];
+        if (!info) return;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(info.code).then(() => {
+            alert('Copied ' + info.label + ' to clipboard!');
+          }).catch(() => {
+            if (copyToClipboardFallback(info.code)) {
+              alert('Copied ' + info.label + ' to clipboard!');
+            } else {
+              alert('Unable to access clipboard. Please select and copy manually.');
+            }
+          });
+        } else {
+          if (copyToClipboardFallback(info.code)) {
+            alert('Copied ' + info.label + ' to clipboard!');
+          } else {
+            alert('Unable to access clipboard. Please select and copy manually.');
+          }
+        }
+      }
+      window.copyCurrentCode = copyCurrentCode;
+
+      // Initialize table, metrics and code viewer states on startup
+      renderSqliteTable();
+      updateInspectorStats();
+      loadSourceCode('packet');
+    })();
+  </script>
+</body>
+</html>

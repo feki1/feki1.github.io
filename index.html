@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mohamed Seddik Feki — Full-Stack Web &amp; Mobile App Developer | Robotics &amp; Automation Engineering</title>
+  <meta name="description" content="Interactive Portfolio &amp; ATS CV of Mohamed Seddik Feki — Full-Stack Web/Mobile App Developer &amp; Robotics and Automation Engineering Honours Student at Xiamen University Malaysia (XMUM).">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/print.css">
+</head>
+<body>
+
+  <!-- Sticky Glassmorphic Navigation Bar -->
+  <header class="site-header" data-testid="header-navbar">
+    <div class="container navbar-inner">
+      <a href="#top" class="brand-link" data-testid="header-brand">
+        <span class="brand-monogram">MSF</span>
+        <span>Mohamed Seddik Feki</span>
+      </a>
+
+      <nav aria-label="Primary Navigation">
+        <ul class="nav-links">
+          <li><a href="#services">Services</a></li>
+          <li><a href="#projects">Projects</a></li>
+          <li><a href="#skills">Skills</a></li>
+          <li><a href="#education">Education</a></li>
+          <li><a href="#experience">Experience</a></li>
+          <li><a href="#languages">Languages</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <button type="button" class="btn-icon" data-testid="theme-toggle" aria-label="Toggle color theme" title="Toggle Dark/Light Theme">
+          ☀️ Light
+        </button>
+        <a href="cv.html" class="btn btn-primary" data-testid="nav-cv-button">
+          📄 ATS Resume / PDF
+        </a>
+        <button type="button" class="btn-icon mobile-menu-btn" data-testid="mobile-menu-toggle" aria-label="Toggle mobile navigation" aria-expanded="false">
+          ☰
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div class="mobile-nav-drawer" data-testid="mobile-nav-drawer">
+      <ul class="mobile-nav-list">
+        <li><a href="#services">Freelance Services</a></li>
+        <li><a href="#projects">Featured Projects</a></li>
+        <li><a href="#skills">Engineering Stack</a></li>
+        <li><a href="#education">Academic Pedigree (XMUM)</a></li>
+        <li><a href="#experience">Experience &amp; Leadership</a></li>
+        <li><a href="#languages">5 Spoken Languages</a></li>
+        <li><a href="#contact">Direct Contact &amp; Hire</a></li>
+        <li><a href="cv.html">Download / Print ATS Resume (PDF)</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- 1. Dual-Audience Hero Section -->
+    <section class="hero-section" data-testid="hero-section">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <div class="availability-pill" data-testid="hero-availability-badge">
+            <span class="pulse-dot"></span>
+            <span>Available for Freelance Projects &amp; Global Summer Internships</span>
+          </div>
+
+          <h1 class="hero-title">
+            Hi, I'm <span class="hero-gradient-text">Mohamed Seddik Feki</span>
+          </h1>
+
+          <p class="hero-headline" data-testid="hero-headline">
+            Software, Web &amp; Mobile App Developer | Robotics &amp; Automation Engineering Undergrad
+          </p>
+
+          <p class="hero-bio">
+            Bridging high-conversion <strong>Full-Stack Web &amp; Cross-Platform Mobile Development</strong> (React, Next.js, TypeScript, Flutter, React Native) with <strong>Autonomous Robotics &amp; Embedded Systems Engineering</strong> (C/C++, Python, ROS2, ESP32). Honours undergraduate at <strong>Xiamen University Malaysia (2025–2029)</strong> on a <strong>50% Academic Merit Scholarship</strong>, backed by a <strong>19.75/20 National Mathematics score</strong> and fluency across <strong>5 languages</strong>.
+          </p>
+
+          <div class="hero-actions">
+            <a href="#contact" class="btn btn-primary" data-testid="hero-cta-hire">
+              🚀 Hire Me / Start a Project
+            </a>
+            <a href="cv.html" class="btn btn-secondary" data-testid="hero-cta-cv">
+              📄 View Printable ATS CV (PDF)
+            </a>
+            <button type="button" class="btn btn-secondary js-copy-email" data-testid="quick-copy-email-btn">
+              📋 Copy Email (fekiseddik@gmail.com)
+            </button>
+          </div>
+
+          <!-- Global Mobility & Availability Badges -->
+          <div class="mobility-strip" data-testid="mobility-badge">
+            <div class="mobility-card">
+              <div class="mobility-card-title">📍 Malaysia On-Site &amp; Hybrid</div>
+              <div class="mobility-card-sub">Available across Sepang, Cyberjaya &amp; Kuala Lumpur</div>
+            </div>
+            <div class="mobility-card">
+              <div class="mobility-card-title">🌐 Remote Worldwide</div>
+              <div class="mobility-card-sub">Ready for global freelance contracts &amp; remote internships</div>
+            </div>
+            <div class="mobility-card">
+              <div class="mobility-card-title">✈️ Global Summer Relocation</div>
+              <div class="mobility-card-sub">Open to relocate to any country for Summer Internships</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Portrait & Multilingual Highlight -->
+        <div class="hero-visual">
+          <div class="hero-photo-frame">
+            <img src="photo.jpg" alt="Mohamed Seddik Feki Portrait" class="hero-avatar rounded-full" data-testid="hero-photo">
+          </div>
+          <div class="multilingual-pill" data-testid="multilingual-badge">
+            <div class="multilingual-pill-title">🌍 5-Language Multilingual Engineer</div>
+            <div class="multilingual-pill-langs">Arabic &bull; French (C1) &bull; English (IELTS 7.5) &bull; Italian &bull; Spanish</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Freelance Services Section -->
+    <section id="services" class="section" data-testid="services-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">For Freelance Clients &amp; Startups</span>
+          <h2 class="section-title">End-to-End Engineering &amp; Development Services</h2>
+          <p class="section-subtitle">
+            Delivering production-grade web applications, cross-platform mobile apps, and custom hardware-software automation solutions with transparent communication in 5 languages.
+          </p>
+        </div>
+
+        <div class="services-grid" data-testid="services-grid">
+          <article class="card" data-testid="service-card-web">
+            <span class="card-badge">Web &amp; SaaS</span>
+            <h3 class="card-title">Full-Stack Web &amp; SaaS Development</h3>
+            <p class="card-desc">
+              Ultra-fast, SEO-optimized web applications, SaaS dashboards, and interactive portals built with React, Next.js, TypeScript, Node.js, and Tailwind CSS.
+            </p>
+            <ul class="tag-list">
+              <li class="tag">Modern SaaS Portals</li>
+              <li class="tag">REST &amp; GraphQL APIs</li>
+              <li class="tag">95+ Lighthouse Speed</li>
+              <li class="tag">Responsive Figma-to-Code</li>
+            </ul>
+          </article>
+
+          <article class="card" data-testid="service-card-mobile">
+            <span class="card-badge">iOS &amp; Android</span>
+            <h3 class="card-title">Cross-Platform Mobile App Development</h3>
+            <p class="card-desc">
+              Native-performance iOS and Android mobile apps built from a single codebase using Flutter or React Native, integrated with Firebase or AWS cloud backends.
+            </p>
+            <ul class="tag-list">
+              <li class="tag">Flutter &amp; React Native</li>
+              <li class="tag">Offline-First Cloud Sync</li>
+              <li class="tag">Push Notifications</li>
+              <li class="tag">60 FPS Mobile UI/UX</li>
+            </ul>
+          </article>
+
+          <article class="card" data-testid="service-card-iot">
+            <span class="card-badge">Robotics &amp; Embedded</span>
+            <h3 class="card-title">Robotics, Embedded Firmware &amp; IoT Systems</h3>
+            <p class="card-desc">
+              Custom C/C++ firmware for ESP32 and Arduino microcontrollers, ROS/ROS2 robotic nodes, sensor fusion pipelines, and real-time MQTT/WebSocket dashboards.
+            </p>
+            <ul class="tag-list">
+              <li class="tag">ESP32 &amp; Arduino C/C++</li>
+              <li class="tag">ROS / ROS2 Navigation</li>
+              <li class="tag">MQTT &amp; WebSockets</li>
+              <li class="tag">Sensor Fusion &amp; SLAM</li>
+            </ul>
+          </article>
+
+          <article class="card" data-testid="service-card-automation">
+            <span class="card-badge">Automation &amp; AI</span>
+            <h3 class="card-title">Python Automation &amp; Intelligent Control</h3>
+            <p class="card-desc">
+              Custom Python automation workflows, closed-loop PID control algorithms, computer vision pipelines, and cloud telemetry integration.
+            </p>
+            <ul class="tag-list">
+              <li class="tag">Python Scripting &amp; APIs</li>
+              <li class="tag">PID Control Algorithms</li>
+              <li class="tag">Edge Anomaly Detection</li>
+              <li class="tag">Cloud Telemetry</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Interactive Showcase Projects Section -->
+    <section id="projects" class="section" data-testid="projects-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">Featured Engineering Portfolio</span>
+          <h2 class="section-title">Showcase Projects Across Mobile, Web &amp; Robotics</h2>
+          <p class="section-subtitle">
+            Filter by domain to explore how I combine modern software architecture with embedded robotics and real-time control systems.
+          </p>
+        </div>
+
+        <!-- Category Filter Bar -->
+        <div class="filter-bar" role="toolbar" aria-label="Filter projects by category">
+          <button type="button" class="filter-tab active" data-filter="all" data-testid="filter-tab-all" aria-pressed="true">
+            All Projects (4)
+          </button>
+          <button type="button" class="filter-tab" data-filter="mobile" data-testid="filter-tab-mobile" aria-pressed="false">
+            Mobile Apps (Flutter / RN)
+          </button>
+          <button type="button" class="filter-tab" data-filter="web" data-testid="filter-tab-web" aria-pressed="false">
+            Full-Stack Web (Next.js / TS)
+          </button>
+          <button type="button" class="filter-tab" data-filter="robotics" data-testid="filter-tab-robotics" aria-pressed="false">
+            Robotics &amp; IoT (ROS / ESP32)
+          </button>
+        </div>
+
+        <!-- Projects Grid -->
+        <div class="projects-grid">
+          <!-- Project 1: Mobile -->
+          <article class="card project-card" data-category="mobile" data-testid="project-card-1">
+            <span class="card-badge">Cross-Platform Mobile App</span>
+            <h3 class="card-title">OmniTrack: Cross-Platform Fleet &amp; Asset Telemetry App</h3>
+            <p class="card-desc">
+              Production-ready cross-platform mobile application engineered with Flutter, Dart, and Firebase for real-time asset tracking, interactive GPS dispatch, and offline-first synchronization.
+            </p>
+            <ul class="project-highlights">
+              <li>Sub-second real-time telemetry streaming across iOS and Android with reactive state management.</li>
+              <li>Offline-first local SQLite caching with automatic background cloud sync upon network recovery.</li>
+              <li>Clean, accessible mobile UI/UX designed in Figma with smooth 60 FPS animations.</li>
+            </ul>
+            <ul class="tag-list">
+              <li class="tag">Flutter</li>
+              <li class="tag">Dart</li>
+              <li class="tag">React Native</li>
+              <li class="tag">Firebase</li>
+              <li class="tag">REST APIs</li>
+              <li class="tag">iOS &amp; Android</li>
+            </ul>
+            <div class="project-links">
+              <a href="projects/omnitrack-mobile/demo/index.html" class="btn btn-primary" data-testid="omnitrack-demo-link" target="_blank" rel="noopener noreferrer">⚡ Live Interactive Demo</a>
+              <a href="https://github.com/fekiseddik/omnitrack-mobile-flutter" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub Source</a>
+            </div>
+          </article>
+
+          <!-- Project 2: Web -->
+          <article class="card project-card" data-category="web" data-testid="project-card-2">
+            <span class="card-badge">Full-Stack Web &amp; SaaS</span>
+            <h3 class="card-title">NexusPulse: Full-Stack Enterprise Analytics &amp; SaaS Platform</h3>
+            <p class="card-desc">
+              High-performance SaaS web platform built with Next.js, React, TypeScript, and Tailwind CSS featuring role-based access control, interactive telemetry charts, and GraphQL/REST APIs.
+            </p>
+            <ul class="project-highlights">
+              <li>Server-side rendered (SSR) architecture achieving a 99/100 Lighthouse performance score and sub-100ms API response times.</li>
+              <li>Interactive time-series visualization rendering 50,000+ data points smoothly without DOM lag.</li>
+              <li>End-to-end authentication with JWT rotation and granular Role-Based Access Control (RBAC).</li>
+            </ul>
+            <ul class="tag-list">
+              <li class="tag">Next.js</li>
+              <li class="tag">TypeScript</li>
+              <li class="tag">React</li>
+              <li class="tag">Node.js</li>
+              <li class="tag">Tailwind CSS</li>
+              <li class="tag">GraphQL</li>
+            </ul>
+            <div class="project-links">
+              <a href="projects/nexus-pulse-saas/demo/index.html" class="btn btn-primary" data-testid="nexus-pulse-demo-link" target="_blank" rel="noopener noreferrer">⚡ Live Interactive Demo</a>
+              <a href="https://github.com/fekiseddik/nexus-pulse-saas" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub Source</a>
+            </div>
+          </article>
+
+          <!-- Project 3: Robotics -->
+          <article class="card project-card" data-category="robotics" data-testid="project-card-3">
+            <span class="card-badge">Robotics &amp; Embedded</span>
+            <h3 class="card-title">RoboVision: ROS/ROS2 &amp; ESP32 Autonomous Mobile Robot &amp; Dashboard</h3>
+            <p class="card-desc">
+              Autonomous mobile robotic navigation platform integrating ROS/ROS2, C++, Python, and dual-core ESP32 microcontrollers with 2D LiDAR SLAM and a real-time browser telemetry dashboard.
+            </p>
+            <ul class="project-highlights">
+              <li>Multi-sensor fusion combining wheel odometry, IMU data, and 2D planar LiDAR for ±2cm SLAM localization accuracy.</li>
+              <li>Custom C++ low-level motor driver firmware on dual-core ESP32 with hardware PWM and interrupt quadrature encoders.</li>
+              <li>Live WebSocket browser dashboard streaming robot pose, LiDAR point clouds, and battery health diagnostics.</li>
+            </ul>
+            <ul class="tag-list">
+              <li class="tag">ROS / ROS2</li>
+              <li class="tag">C++</li>
+              <li class="tag">ESP32</li>
+              <li class="tag">Python</li>
+              <li class="tag">WebSockets</li>
+              <li class="tag">Linux (Ubuntu)</li>
+            </ul>
+            <div class="project-links">
+              <a href="projects/robovision-ros2/demo/index.html" class="btn btn-primary" data-testid="robovision-demo-link" target="_blank" rel="noopener noreferrer">⚡ Live Interactive Demo</a>
+              <a href="https://github.com/fekiseddik/ros2-esp32-amr" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub Source</a>
+            </div>
+          </article>
+
+          <!-- Project 4: AI / IoT Automation -->
+          <article class="card project-card" data-category="robotics" data-testid="project-card-4">
+            <span class="card-badge">AI &amp; IoT Automation</span>
+            <h3 class="card-title">SmartGrid: AI-Driven Industrial IoT &amp; Environmental Control System</h3>
+            <p class="card-desc">
+              Distributed environmental monitoring and automated feedback control system powered by ESP32 and Arduino sensor nodes, MQTT broker messaging, and Python edge anomaly inference.
+            </p>
+            <ul class="project-highlights">
+              <li>Closed-loop PID control algorithms maintaining target environmental variables within ±1.5% of setpoints.</li>
+              <li>Lightweight Python edge anomaly detection identifying sensor drift and triggering fail-safe actuator cutoffs.</li>
+              <li>Ultra-low-power deep-sleep scheduling enabling remote battery sensor nodes to operate 6+ months per charge.</li>
+            </ul>
+            <ul class="tag-list">
+              <li class="tag">Python</li>
+              <li class="tag">C / C++</li>
+              <li class="tag">Arduino</li>
+              <li class="tag">ESP32</li>
+              <li class="tag">MQTT</li>
+              <li class="tag">Control Algorithms</li>
+            </ul>
+            <div class="project-links">
+              <a href="projects/smartgrid-iot/demo/index.html" class="btn btn-primary" data-testid="smartgrid-demo-link" target="_blank" rel="noopener noreferrer">⚡ Live Interactive Demo</a>
+              <a href="https://github.com/fekiseddik/smartgrid-iot-automation" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub Source</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Categorized Technical Skills Matrix (4 Domains) -->
+    <section id="skills" class="section" data-testid="skills-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">Technical Depth</span>
+          <h2 class="section-title">4-Domain Engineering &amp; Software Stack</h2>
+          <p class="section-subtitle">
+            Equipped to contribute across the entire stack—from low-level C/C++ microcontroller firmware and ROS nodes to cloud-backed Next.js and Flutter applications.
+          </p>
+        </div>
+
+        <div class="skills-grid">
+          <div class="card" data-testid="skill-category-web">
+            <span class="card-badge">Domain 01</span>
+            <h3 class="card-title">Full-Stack Web Development</h3>
+            <p class="card-desc">Modern reactive frontends, SSR web apps, and scalable backend APIs.</p>
+            <ul class="tag-list">
+              <li class="tag">React</li>
+              <li class="tag">Next.js</li>
+              <li class="tag">TypeScript</li>
+              <li class="tag">JavaScript (ES6+)</li>
+              <li class="tag">HTML5</li>
+              <li class="tag">CSS3</li>
+              <li class="tag">Tailwind CSS</li>
+              <li class="tag">Node.js</li>
+              <li class="tag">REST &amp; GraphQL APIs</li>
+            </ul>
+          </div>
+
+          <div class="card" data-testid="skill-category-mobile">
+            <span class="card-badge">Domain 02</span>
+            <h3 class="card-title">Mobile App Development</h3>
+            <p class="card-desc">Cross-platform native-feel applications for iOS and Android.</p>
+            <ul class="tag-list">
+              <li class="tag">Flutter</li>
+              <li class="tag">React Native</li>
+              <li class="tag">Dart</li>
+              <li class="tag">Cross-Platform iOS/Android</li>
+              <li class="tag">Mobile UI/UX</li>
+              <li class="tag">Offline Sync</li>
+            </ul>
+          </div>
+
+          <div class="card" data-testid="skill-category-robotics">
+            <span class="card-badge">Domain 03</span>
+            <h3 class="card-title">Robotics, Embedded &amp; Automation</h3>
+            <p class="card-desc">Autonomous systems, microcontroller firmware, and real-time telemetry.</p>
+            <ul class="tag-list">
+              <li class="tag">C</li>
+              <li class="tag">C++</li>
+              <li class="tag">Python</li>
+              <li class="tag">ROS / ROS2</li>
+              <li class="tag">Arduino</li>
+              <li class="tag">ESP32</li>
+              <li class="tag">Microcontrollers</li>
+              <li class="tag">Sensor Fusion</li>
+              <li class="tag">MQTT / WebSockets</li>
+              <li class="tag">Control Algorithms</li>
+            </ul>
+          </div>
+
+          <div class="card" data-testid="skill-category-cloud">
+            <span class="card-badge">Domain 04</span>
+            <h3 class="card-title">Cloud, DevOps &amp; Tools</h3>
+            <p class="card-desc">Production deployment, Linux environments, version control, and UI design.</p>
+            <ul class="tag-list">
+              <li class="tag">Firebase</li>
+              <li class="tag">AWS</li>
+              <li class="tag">Linux (Ubuntu/Debian)</li>
+              <li class="tag">Git &amp; GitHub</li>
+              <li class="tag">Figma</li>
+              <li class="tag">CI/CD Workflows</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Academic Pedigree & Education -->
+    <section id="education" class="section" data-testid="education-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">For Internship Recruiters</span>
+          <h2 class="section-title">Academic Pedigree &amp; Quantitative Excellence</h2>
+          <p class="section-subtitle">
+            Strong theoretical foundation in mathematics, physics, control engineering, and computer science.
+          </p>
+        </div>
+
+        <div class="edu-grid">
+          <article class="card">
+            <span class="card-badge">2025 – 2029 &bull; 50% Academic Merit Scholarship</span>
+            <h3 class="card-title">Xiamen University Malaysia (XMUM)</h3>
+            <p class="card-desc">
+              <strong>Bachelor of Robotics and Automation Engineering (Honours)</strong> — Sepang, Selangor, Malaysia
+            </p>
+            <ul class="project-highlights">
+              <li>Awarded the prestigious <strong>50% Academic Merit Scholarship</strong> for outstanding pre-university academic distinction.</li>
+              <li><strong>Focus Areas:</strong> Embedded Systems, Autonomous Robotics, Control Systems, Computer Vision, Full-Stack Software Engineering, IoT Architecture.</li>
+              <li>Active availability for <strong>Malaysia On-Site/Hybrid roles</strong>, <strong>Remote Internships</strong>, and <strong>Global Summer Internship Relocation</strong>.</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <span class="card-badge">Graduated 2024 &bull; Mathematics Score: 19.75 / 20</span>
+            <h3 class="card-title">Lycée Pilote Hammam Lif (Tunisia)</h3>
+            <p class="card-desc">
+              <strong>Tunisian National Baccalaureate — Mathematics Section</strong> (Elite Pioneer High School)
+            </p>
+            <ul class="project-highlights">
+              <li>Graduated with <strong>Honors (16.11 / 20 Overall)</strong> from Tunisia's rigorous Mathematics track.</li>
+              <li>Achieved a near-perfect <strong>19.75 / 20 in National Mathematics</strong>, demonstrating exceptional analytical and algorithmic problem-solving capability.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Professional Experience & Community Leadership -->
+    <section id="experience" class="section" data-testid="experience-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">Track Record &amp; Leadership</span>
+          <h2 class="section-title">Professional Experience &amp; Community Impact</h2>
+        </div>
+
+        <div class="edu-grid">
+          <article class="card">
+            <span class="card-badge">2023 – Present &bull; Remote Worldwide</span>
+            <h3 class="card-title">Freelance Software, Web &amp; Mobile App Developer</h3>
+            <p class="card-desc"><strong>Independent Contractor / Self-Employed</strong></p>
+            <ul class="project-highlights">
+              <li>Architected and delivered 8+ commercial web platforms and cross-platform mobile apps using React, Next.js, TypeScript, Flutter, and Firebase with 100% on-time delivery.</li>
+              <li>Engineered resilient REST and GraphQL APIs backed by PostgreSQL and Cloud Firestore with 99.9% operational uptime.</li>
+              <li>Translated client product visions into responsive UI/UX prototypes in Figma and production code for international clients.</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <span class="card-badge">3 Years Active Service &bull; 3x "Member of the Month"</span>
+            <h3 class="card-title">Tunisian Red Crescent — Core Planning Member</h3>
+            <p class="card-desc"><strong>Humanitarian Operations &amp; Team Leadership</strong></p>
+            <ul class="project-highlights">
+              <li>Honored <strong>3 times as "Member of the Month"</strong> for exceptional crisis mobilization, reliability, and event planning.</li>
+              <li>Coordinated cross-functional volunteer teams and community health logistics under high-pressure operational timelines.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Multilingual Fluency (5 Languages) -->
+    <section id="languages" class="section" data-testid="languages-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">Global Communication</span>
+          <h2 class="section-title">Multilingual Fluency Across 5 Languages</h2>
+          <p class="section-subtitle">
+            Capable of collaborating seamlessly with engineering teams and freelance clients across North America, Europe, the Middle East, North Africa, and Asia-Pacific.
+          </p>
+        </div>
+
+        <div class="languages-grid" data-testid="languages-grid">
+          <div class="card">
+            <span class="card-badge">Native</span>
+            <h3 class="card-title">Arabic</h3>
+            <p class="card-desc">Native / Bilingual Fluency</p>
+          </div>
+          <div class="card">
+            <span class="card-badge">TCF C1 Certified</span>
+            <h3 class="card-title">French</h3>
+            <p class="card-desc">Bilingual / C1 Advanced Proficiency</p>
+          </div>
+          <div class="card">
+            <span class="card-badge">IELTS 7.5 (CEFR C1)</span>
+            <h3 class="card-title">English</h3>
+            <p class="card-desc">Full Professional &amp; Academic Proficiency</p>
+          </div>
+          <div class="card">
+            <span class="card-badge">B2 Working</span>
+            <h3 class="card-title">Italian</h3>
+            <p class="card-desc">Working Professional Proficiency</p>
+          </div>
+          <div class="card">
+            <span class="card-badge">B1+ Working</span>
+            <h3 class="card-title">Spanish</h3>
+            <p class="card-desc">Conversational &amp; Technical Working Proficiency</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Direct Contact & Conversion Section -->
+    <section id="contact" class="section" data-testid="contact-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">Let's Build Together</span>
+          <h2 class="section-title">Hire Me for Freelance Projects or Summer / Remote Internships</h2>
+          <p class="section-subtitle">
+            Reach out directly via email, WhatsApp, or phone—or grab my single-page ATS PDF resume for your recruiting pipeline.
+          </p>
+        </div>
+
+        <div class="contact-grid">
+          <div class="card">
+            <h3 class="card-title">Direct Contact Channels</h3>
+            <p class="card-desc">Fast response across all time zones. Click any channel below to connect immediately:</p>
+
+            <div class="contact-channel-list">
+              <div class="contact-channel-item">
+                <div>
+                  <strong>Email Address</strong>
+                  <div><a href="mailto:fekiseddik@gmail.com" data-testid="contact-email-link">fekiseddik@gmail.com</a></div>
+                </div>
+                <button type="button" class="btn btn-secondary js-copy-email" data-testid="copy-email-btn">
+                  📋 Copy Email
+                </button>
+              </div>
+
+              <div class="contact-channel-item">
+                <div>
+                  <strong>Phone (Malaysia)</strong>
+                  <div><a href="tel:+60142735502" data-testid="contact-phone-link">+60 14 273 5502</a></div>
+                </div>
+                <a href="tel:+60142735502" class="btn btn-secondary">📞 Call Now</a>
+              </div>
+
+              <div class="contact-channel-item">
+                <div>
+                  <strong>WhatsApp Direct</strong>
+                  <div>Instant chat for freelance &amp; recruiter inquiries</div>
+                </div>
+                <a href="https://wa.me/60142735502?text=Hello%20Mohamed,%20I%20am%20contacting%20you%20regarding%20a%20project/internship%20opportunity." target="_blank" rel="noopener noreferrer" class="btn btn-primary" data-testid="contact-whatsapp-link">
+                  💬 Message on WhatsApp
+                </a>
+              </div>
+
+              <div class="contact-channel-item">
+                <div>
+                  <strong>LinkedIn Profile</strong>
+                  <div><a href="https://www.linkedin.com/in/seddik-feki-01b084277/" target="_blank" rel="noopener noreferrer">linkedin.com/in/seddik-feki-01b084277</a></div>
+                </div>
+                <a href="https://www.linkedin.com/in/seddik-feki-01b084277/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">🔗 Connect on LinkedIn</a>
+              </div>
+
+              <div class="contact-channel-item">
+                <div>
+                  <strong>ATS-Compliant Resume (PDF)</strong>
+                  <div>Formatted for single-page A4 / Letter printing</div>
+                </div>
+                <a href="cv.html" class="btn btn-secondary">📄 Open Printable CV</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="card contact-form-container">
+            <h3 class="card-title">Send a Direct Inquiry</h3>
+            <p class="card-desc">Fill out your details below to compose a pre-formatted project or internship email:</p>
+
+            <form data-testid="contact-form">
+              <div class="form-group">
+                <label class="form-label" for="senderName">Your Name / Organization</label>
+                <input class="form-input" type="text" id="senderName" name="senderName" required placeholder="e.g., Sarah Chen — TechCorp Recruiting">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="senderEmail">Your Email</label>
+                <input class="form-input" type="email" id="senderEmail" name="senderEmail" required placeholder="name@company.com">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="inquiryType">Engagement Type</label>
+                <select class="form-input" id="inquiryType" name="inquiryType">
+                  <option value="Freelance Web / Mobile App Project">Freelance Web / Mobile App Project</option>
+                  <option value="Software / Robotics Internship (Summer / Remote / Malaysia)">Software / Robotics Internship (Summer / Remote / Malaysia)</option>
+                  <option value="Robotics / Embedded / IoT Consulting">Robotics / Embedded / IoT Consulting</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="message">Project Details or Role Description</label>
+                <textarea class="form-textarea" id="message" name="message" rows="4" required placeholder="Tell me about your timeline, tech stack, or internship opportunity..."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary" data-testid="contact-form-submit">
+                ✉️ Send Inquiry to Mohamed
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification Element -->
+  <div class="copy-toast" data-testid="copy-toast" role="status" aria-live="polite">
+    Copied email: fekiseddik@gmail.com
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2026 Mohamed Seddik Feki &bull; Full-Stack Software, Web &amp; Mobile Developer | Robotics &amp; Automation Engineering (XMUM)</p>
+    </div>
+  </footer>
+
+  <script src="data/portfolio-data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

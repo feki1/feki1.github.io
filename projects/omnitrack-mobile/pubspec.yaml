@@ -1,0 +1,28 @@
+name: omnitrack_mobile
+description: Cross-Platform Fleet and Asset Telemetry Mobile App with Offline-First SQLite Sync Engine and Firebase Cloud Integration by Mohamed Seddik Feki.
+version: 1.0.0+1
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite: ^2.3.0
+  path_provider: ^2.1.2
+  path: ^1.9.0
+  cloud_firestore: ^4.15.5
+  firebase_core: ^2.27.0
+  connectivity_plus: ^5.0.2
+  provider: ^6.1.1
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

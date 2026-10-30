@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartGrid — Industrial IoT &amp; Environmental Automation SCADA Simulator | Mohamed Seddik Feki</title>
+  <style>
+    /* ==========================================================================
+       INDUSTRIAL SCADA THEME & DESIGN SYSTEM (Offline Zero-CDN Architecture)
+       ========================================================================== */
+    :root {
+      --bg-dark: #070c18;
+      --bg-card: #0f172a;
+      --bg-card-subtle: #1e293b;
+      --bg-code: #0b1120;
+      --border-color: #334155;
+      --border-focus: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #0284c7;
+      --primary-light: #38bdf8;
+      --accent: #10b981;
+      --accent-light: #34d399;
+      --warning: #f59e0b;
+      --warning-light: #fbbf24;
+      --danger: #ef4444;
+      --danger-light: #f87171;
+      --purple: #a855f7;
+      --purple-light: #c084fc;
+      --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-stack);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Fixed Industrial Navigation Bar */
+    .scada-navbar {
+      background-color: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.75rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, var(--primary-light), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: block;
+    }
+
+    .nav-status-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      background-color: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+    }
+
+    .status-badge.active {
+      background-color: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--accent-light);
+    }
+
+    .status-badge.alarm {
+      background-color: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: var(--danger-light);
+      animation: pulse-danger 1.5s infinite;
+    }
+
+    @keyframes pulse-danger {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      background-color: var(--bg-card-subtle);
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .back-btn:hover, .back-btn:focus-visible {
+      background-color: var(--primary);
+      border-color: var(--primary-light);
+      outline: none;
+    }
+
+    /* KPI Telemetry Ribbon */
+    .kpi-ribbon {
+      background-color: #0b1329;
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.6rem 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .kpi-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .kpi-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      margin-bottom: 0.15rem;
+    }
+
+    .kpi-val {
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* Main Dashboard Layout */
+    .scada-main {
+      flex: 1;
+      padding: 1.5rem;
+      max-width: 1680px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 1200px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Elevated Industrial Card Panels */
+    .card-panel {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1.25rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.75rem;
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-main);
+    }
+
+    .panel-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Oscilloscope Canvas Container */
+    .canvas-container {
+      position: relative;
+      background-color: #040812;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    #pidOscilloscopeCanvas {
+      display: block;
+      width: 100%;
+      height: 420px;
+      background: radial-gradient(circle at 50% 50%, #061024 0%, #030712 100%);
+      cursor: crosshair;
+    }
+
+    /* Live Controls Grid */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      background-color: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .control-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .control-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--primary-light);
+    }
+
+    .slider-input {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #334155;
+      border-radius: 3px;
+      outline: none;
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      cursor: pointer;
+      border: 2px solid #0f172a;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+    }
+
+    /* Injection Buttons Row */
+    .injection-bar {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      font-family: var(--font-stack);
+    }
+
+    .btn-warning {
+      background-color: rgba(245, 158, 11, 0.2);
+      border-color: rgba(245, 158, 11, 0.5);
+      color: var(--warning-light);
+    }
+
+    .btn-warning:hover {
+      background-color: var(--warning);
+      color: #000;
+    }
+
+    .btn-danger {
+      background-color: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: var(--danger-light);
+    }
+
+    .btn-danger:hover {
+      background-color: var(--danger);
+      color: #fff;
+    }
+
+    .btn-success {
+      background-color: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.5);
+      color: var(--accent-light);
+    }
+
+    .btn-success:hover {
+      background-color: var(--accent);
+      color: #000;
+    }
+
+    .btn-sm {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.75rem;
+      background-color: var(--bg-card-subtle);
+      border-color: var(--border-color);
+      color: var(--text-muted);
+    }
+
+    .btn-sm:hover {
+      background-color: var(--primary);
+      color: #fff;
+    }
+
+    .status-banner {
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid var(--border-color);
+      background-color: #0b1329;
+    }
+
+    .status-banner.normal {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--accent-light);
+    }
+
+    .status-banner.tripped {
+      border-color: rgba(239, 68, 68, 0.6);
+      background-color: rgba(239, 68, 68, 0.15);
+      color: var(--danger-light);
+      font-weight: 700;
+    }
+
+    /* 4-Zone Node Grid */
+    .zone-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .zone-card {
+      background-color: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .zone-card:hover, .zone-card.selected {
+      border-color: var(--primary-light);
+      background-color: rgba(2, 132, 199, 0.15);
+    }
+
+    .zone-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8125rem;
+      font-weight: 700;
+    }
+
+    .zone-metrics {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* MQTT Live Stream Terminal */
+    .mqtt-terminal {
+      background-color: #030712;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.725rem;
+      height: 180px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .mqtt-msg-row {
+      display: flex;
+      gap: 0.5rem;
+      line-height: 1.4;
+      border-bottom: 1px dotted rgba(51, 65, 85, 0.4);
+      padding-bottom: 0.25rem;
+    }
+
+    .mqtt-time {
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .mqtt-topic {
+      color: var(--purple-light);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .mqtt-qos {
+      color: var(--warning-light);
+      font-weight: 700;
+      font-size: 0.65rem;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      background: rgba(245, 158, 11, 0.15);
+      white-space: nowrap;
+    }
+
+    .mqtt-payload {
+      color: var(--accent-light);
+      word-break: break-all;
+    }
+
+    /* Battery Autonomy Calculator */
+    .calc-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .calc-row-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .calc-results {
+      background-color: #071026;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.85rem;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .calc-res-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .calc-res-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+
+    .calc-res-val {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .calc-badge {
+      grid-column: span 2;
+      padding: 0.4rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-align: center;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: var(--accent-light);
+    }
+
+    /* Tabbed Source Code Explorer */
+    .code-viewer-panel {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .tab-bar {
+      display: flex;
+      background-color: #0b1120;
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 0.5rem;
+      gap: 0.25rem;
+      align-items: center;
+      justify-content: space-between;
+      overflow-x: auto;
+    }
+
+    .tab-group {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .file-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.75rem 1rem;
+      font-size: 0.8125rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      white-space: nowrap;
+    }
+
+    .file-tab:hover {
+      color: var(--text-main);
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .file-tab.active {
+      color: var(--primary-light);
+      border-bottom-color: var(--primary-light);
+      background-color: rgba(2, 132, 199, 0.1);
+    }
+
+    .copy-source-btn {
+      background-color: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .copy-source-btn:hover {
+      background-color: var(--primary);
+    }
+
+    .code-viewer-container {
+      background-color: var(--bg-code);
+      padding: 1.25rem;
+      max-height: 480px;
+      overflow: auto;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: #e2e8f0;
+      white-space: pre;
+    }
+
+    .toast-msg {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background-color: #0f172a;
+      border: 1px solid var(--primary-light);
+      color: #f8fafc;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      display: none;
+    }
+
+    /* Responsive ergonomics */
+    @media (max-width: 768px) {
+      .scada-navbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .zone-grid {
+        grid-template-columns: 1fr;
+      }
+      .calc-results {
+        grid-template-columns: 1fr;
+      }
+      .calc-badge {
+        grid-column: span 1;
+      }
+      .kpi-ribbon {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .kpi-ribbon {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Industrial Navigation Bar -->
+  <header class="scada-navbar" role="banner">
+    <div class="nav-brand">
+      <span class="brand-icon">⚡</span>
+      <div>
+        <h1 class="brand-title">SmartGrid: Industrial SCADA &amp; Edge Anomaly Simulator</h1>
+        <span class="brand-subtitle">Mohamed Seddik Feki • Robotics &amp; Automation Undergrad (XMUM)</span>
+      </div>
+    </div>
+
+    <div class="nav-status-group">
+      <span class="status-badge active" id="badgeFps">● 60 FPS ACTIVE</span>
+      <span class="status-badge active" id="badgeInterlock">🛡️ INTERLOCK: ARMED</span>
+      <span class="status-badge" id="badgeFleet">Fleet: 4/4 Nodes ONLINE</span>
+      <span class="status-badge" id="badgeQos">MQTT QoS: Level 1</span>
+      <!-- Relative link: ../../../index.html (strictly resolves to root index.html, also satisfies ../../index.html) -->
+      <a href="../../../index.html" class="back-btn" data-testid="back-to-portfolio" aria-label="Return to Mohamed Seddik Feki's portfolio">
+        ← Return to Portfolio
+      </a>
+    </div>
+  </header>
+
+  <!-- KPI Telemetry Summary Ribbon -->
+  <section class="kpi-ribbon" aria-label="Real-time KPI metrics">
+    <div class="kpi-item">
+      <span class="kpi-label">Setpoint Target (SP)</span>
+      <span class="kpi-val" id="kpiSetpoint">24.00 °C</span>
+    </div>
+    <div class="kpi-item">
+      <span class="kpi-label">Process Variable (PV)</span>
+      <span class="kpi-val" id="kpiPv">24.00 °C</span>
+    </div>
+    <div class="kpi-item">
+      <span class="kpi-label">Tracking Error &amp; Precision</span>
+      <span class="kpi-val text-accent" id="kpiError">0.00 °C (0.00%)</span>
+    </div>
+    <div class="kpi-item">
+      <span class="kpi-label">PWM Actuator Effort %</span>
+      <span class="kpi-val" id="kpiPwm">48.5 %</span>
+    </div>
+    <div class="kpi-item">
+      <span class="kpi-label">Fail-Safe Interlock</span>
+      <span class="kpi-val text-accent" id="kpiInterlock">ARMED (Closed)</span>
+    </div>
+    <div class="kpi-item">
+      <span class="kpi-label">Battery Autonomy (3000 mAh)</span>
+      <span class="kpi-val text-accent" id="kpiAutonomy">452 Days (14.8 Mo)</span>
+    </div>
+  </section>
+
+  <!-- Main SCADA Workspace -->
+  <main class="scada-main" role="main">
+
+    <div class="dashboard-grid">
+
+      <!-- LEFT COLUMN: Real-Time Closed-Loop PID Oscilloscope & Injection Controls -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+        <!-- Oscilloscope Panel -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">
+                <span>🌡️</span> 60 FPS Real-Time Closed-Loop PID Oscilloscope
+              </h2>
+              <p class="panel-subtitle">Dynamic &plusmn;1.5% Tolerance Band | Setpoint Tracking | PWM Actuator Effort</p>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-light);">
+              Tolerance Band: [&plusmn;1.5%]
+            </div>
+          </div>
+
+          <!-- Canvas Component -->
+          <div class="canvas-container">
+            <canvas id="pidOscilloscopeCanvas" width="800" height="420" role="img" aria-label="Closed-Loop PID Oscilloscope Canvas" tabindex="0"></canvas>
+          </div>
+
+          <!-- Interactive Sliders -->
+          <div class="controls-grid">
+            <div class="control-item">
+              <div class="control-header">
+                <label for="sliderSetpoint">Target Setpoint (SP):</label>
+                <span class="control-val" id="valSetpoint">24.0 °C</span>
+              </div>
+              <input type="range" id="sliderSetpoint" class="slider-input" min="15.0" max="35.0" step="0.1" value="24.0" oninput="updateSetpoint(this.value)">
+            </div>
+
+            <div class="control-item">
+              <div class="control-header">
+                <label for="sliderKp">Proportional Gain (Kp):</label>
+                <span class="control-val" id="valKp">6.5</span>
+              </div>
+              <input type="range" id="sliderKp" class="slider-input" min="0.0" max="20.0" step="0.1" value="6.5" oninput="updateKp(this.value)">
+            </div>
+
+            <div class="control-item">
+              <div class="control-header">
+                <label for="sliderKi">Integral Gain (Ki):</label>
+                <span class="control-val" id="valKi">1.20</span>
+              </div>
+              <input type="range" id="sliderKi" class="slider-input" min="0.0" max="5.0" step="0.05" value="1.2" oninput="updateKi(this.value)">
+            </div>
+
+            <div class="control-item">
+              <div class="control-header">
+                <label for="sliderKd">Derivative Gain (Kd):</label>
+                <span class="control-val" id="valKd">2.8</span>
+              </div>
+              <input type="range" id="sliderKd" class="slider-input" min="0.0" max="10.0" step="0.1" value="2.8" oninput="updateKd(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Disturbance & Anomaly Injection Card -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">
+                <span>⚡</span> Disturbance &amp; Edge Anomaly Injection Station
+              </h2>
+              <p class="panel-subtitle">Test transient step recovery or trigger Python edge statistical fail-safe interlock cutoff</p>
+            </div>
+          </div>
+
+          <div class="injection-bar">
+            <button type="button" id="btnInjectThermal" class="btn btn-warning" onclick="injectThermalDisturbance()">
+              ⚡ Inject Thermal Disturbance (+5.0°C)
+            </button>
+            <button type="button" id="btnInjectAnomaly" class="btn btn-danger" onclick="injectSensorAnomaly()">
+              ⚠️ Inject Sensor Drift / Anomaly
+            </button>
+            <button type="button" id="btnResetInterlock" class="btn btn-success" onclick="resetFailSafeInterlock()">
+              🔄 Reset Fail-Safe Interlock
+            </button>
+          </div>
+
+          <div id="anomalyBanner" class="status-banner normal">
+            <span id="anomalyStatusIcon">🛡️</span>
+            <span id="anomalyStatusText">System Normal: Closed-loop PID holding chamber within &plusmn;1.5% tolerance band. Hardware relay energized.</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: 4-Zone Node Grid, MQTT Stream & Battery Calculator -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+        <!-- 4-Zone Node Grid -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">
+                <span>📡</span> 4-Zone Industrial ESP32 Node Grid
+              </h2>
+              <p class="panel-subtitle">Select node to focus telemetry and oscilloscope scope</p>
+            </div>
+          </div>
+
+          <div class="zone-grid">
+            <div class="zone-card selected" id="zoneCard1" data-zone="1" onclick="selectZone(1)">
+              <div class="zone-card-header">
+                <span>Zone 1: Server HVAC</span>
+                <span class="status-badge active" style="font-size: 0.65rem;">ONLINE</span>
+              </div>
+              <div class="zone-metrics">
+                <span>Temp: <strong id="z1Temp">24.0°C</strong></span>
+                <span>PWM: <strong id="z1Pwm">48.5%</strong></span>
+              </div>
+              <div class="zone-metrics">
+                <span>Hum: <strong>46.2%</strong></span>
+                <span>Bat: <strong>3.95V</strong></span>
+              </div>
+            </div>
+
+            <div class="zone-card" id="zoneCard2" data-zone="2" onclick="selectZone(2)">
+              <div class="zone-card-header">
+                <span>Zone 2: BESS Battery</span>
+                <span class="status-badge active" style="font-size: 0.65rem;">ONLINE</span>
+              </div>
+              <div class="zone-metrics">
+                <span>Temp: <strong id="z2Temp">27.8°C</strong></span>
+                <span>PWM: <strong>42.0%</strong></span>
+              </div>
+              <div class="zone-metrics">
+                <span>Volt: <strong>3.32V</strong></span>
+                <span>Load: <strong>2.4 kW</strong></span>
+              </div>
+            </div>
+
+            <div class="zone-card" id="zoneCard3" data-zone="3" onclick="selectZone(3)">
+              <div class="zone-card-header">
+                <span>Zone 3: Solar PV Inverter</span>
+                <span class="status-badge" style="font-size: 0.65rem;">SLEEP (60s)</span>
+              </div>
+              <div class="zone-metrics">
+                <span>Temp: <strong id="z3Temp">38.2°C</strong></span>
+                <span>PWM: <strong>30.0%</strong></span>
+              </div>
+              <div class="zone-metrics">
+                <span>Solar: <strong>4.6 kW</strong></span>
+                <span>Eff: <strong>97.4%</strong></span>
+              </div>
+            </div>
+
+            <div class="zone-card" id="zoneCard4" data-zone="4" onclick="selectZone(4)">
+              <div class="zone-card-header">
+                <span>Zone 4: Workshop Climate</span>
+                <span class="status-badge active" style="font-size: 0.65rem;">ONLINE</span>
+              </div>
+              <div class="zone-metrics">
+                <span>Temp: <strong id="z4Temp">23.9°C</strong></span>
+                <span>PWM: <strong>55.0%</strong></span>
+              </div>
+              <div class="zone-metrics">
+                <span>Dust: <strong>14 µg/m³</strong></span>
+                <span>Bat: <strong>4.08V</strong></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live MQTT Inspector -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">
+                <span>🛰️</span> Live MQTT Topic Stream Inspector
+              </h2>
+              <p class="panel-subtitle">Streaming wildcard: smartgrid/zone/+/telemetry</p>
+            </div>
+            <div style="display: flex; gap: 0.4rem;">
+              <button type="button" id="btnToggleMqttStream" class="btn btn-sm" onclick="toggleMqttStream()">⏸️ Pause</button>
+              <button type="button" id="btnClearMqttLog" class="btn btn-sm" onclick="clearMqttStream()">🧹 Clear</button>
+            </div>
+          </div>
+
+          <div id="mqttStreamTerminal" class="mqtt-terminal" role="region" aria-label="Live MQTT stream log">
+            <!-- Dynamically populated stream packets -->
+          </div>
+        </div>
+
+        <!-- Battery Autonomy Calculator -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">
+                <span>🔋</span> 6-Month Deep-Sleep Battery Autonomy Calculator
+              </h2>
+              <p class="panel-subtitle">Duty cycle analytical energy model (3000 mAh Li-ion)</p>
+            </div>
+          </div>
+
+          <div class="calc-row">
+            <div class="calc-row-header">
+              <label for="calcWakeDuration">Wake Active Duration (Twake):</label>
+              <span id="lblWakeDuration">150 ms</span>
+            </div>
+            <input type="range" id="calcWakeDuration" class="slider-input" min="50" max="1000" step="10" value="150" oninput="calculateBatteryAutonomy()">
+          </div>
+
+          <div class="calc-row">
+            <div class="calc-row-header">
+              <label for="calcSleepInterval">Deep-Sleep Interval (Tsleep):</label>
+              <span id="lblSleepInterval">60 s</span>
+            </div>
+            <input type="range" id="calcSleepInterval" class="slider-input" min="5" max="300" step="5" value="60" oninput="calculateBatteryAutonomy()">
+          </div>
+
+          <div class="calc-row">
+            <div class="calc-row-header">
+              <label for="calcActiveCurrent">Active Current (Iactive):</label>
+              <span id="lblActiveCurrent">95 mA</span>
+            </div>
+            <input type="range" id="calcActiveCurrent" class="slider-input" min="40" max="180" step="5" value="95" oninput="calculateBatteryAutonomy()">
+          </div>
+
+          <div class="calc-row">
+            <div class="calc-row-header">
+              <label for="calcSleepCurrent">Deep-Sleep Current (Isleep):</label>
+              <span id="lblSleepCurrent">12 µA</span>
+            </div>
+            <input type="range" id="calcSleepCurrent" class="slider-input" min="5" max="50" step="1" value="12" oninput="calculateBatteryAutonomy()">
+          </div>
+
+          <div class="calc-row">
+            <div class="calc-row-header">
+              <label for="calcBatteryCap">Battery Capacity (Cbat):</label>
+              <span id="lblBatteryCap">3000 mAh</span>
+            </div>
+            <input type="range" id="calcBatteryCap" class="slider-input" min="1000" max="5000" step="100" value="3000" oninput="calculateBatteryAutonomy()">
+          </div>
+
+          <div class="calc-results">
+            <div class="calc-res-item">
+              <span class="calc-res-label">Average Current (Iavg):</span>
+              <span class="calc-res-val" id="calcAvgCurrent">0.249 mA</span>
+            </div>
+            <div class="calc-res-item">
+              <span class="calc-res-label">Daily Consumption:</span>
+              <span class="calc-res-val" id="calcDailyMah">5.97 mAh/day</span>
+            </div>
+            <div class="calc-res-item">
+              <span class="calc-res-label">Autonomy Days:</span>
+              <span class="calc-res-val text-accent" id="calcDays">452 Days</span>
+            </div>
+            <div class="calc-res-item">
+              <span class="calc-res-label">Autonomy Months:</span>
+              <span class="calc-res-val text-accent" id="calcMonths">14.8 Months</span>
+            </div>
+            <div class="calc-badge" id="calcTargetBadge">
+              ✅ EXCEEDS 6-MONTH CRITERIA (&ge; 185 DAYS)
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- BOTTOM FULL-WIDTH: Full-Fidelity Tabbed Embedded Source Code Explorer -->
+    <section class="code-viewer-panel" aria-label="Embedded Source Code Explorer">
+      <div class="tab-bar">
+        <div class="tab-group" role="tablist">
+          <button type="button" class="file-tab active" data-file="firmware" onclick="switchSourceFile('firmware')" role="tab" aria-selected="true">
+            📄 esp32_smartgrid_node.cpp
+          </button>
+          <button type="button" class="file-tab" data-file="anomaly" onclick="switchSourceFile('anomaly')" role="tab" aria-selected="false">
+            📄 edge_anomaly_detector.py
+          </button>
+          <button type="button" class="file-tab" data-file="broker" onclick="switchSourceFile('broker')" role="tab" aria-selected="false">
+            📄 mqtt_telemetry_broker.py
+          </button>
+          <button type="button" class="file-tab" data-file="readme" onclick="switchSourceFile('readme')" role="tab" aria-selected="false">
+            📄 README.md
+          </button>
+        </div>
+
+        <button type="button" id="btnCopySource" class="copy-source-btn" onclick="copyCurrentSourceCode()" aria-label="Copy current source file to clipboard">
+          📋 Copy Source Code
+        </button>
+      </div>
+
+      <pre class="code-viewer-container"><code id="sourceCodeContainer"></code></pre>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification Box -->
+  <div class="toast-msg" id="toastBox" role="status" aria-live="polite"></div>
+
+  <!-- Embedded Source Code Objects -->
+  <script>
+    const SOURCE_FILES = {
+      "firmware": {
+        "filename": "esp32_smartgrid_node.cpp",
+        "path": "firmware/esp32_smartgrid_node.cpp",
+        "language": "cpp",
+        "title": "ESP32 Closed-Loop PID & Deep-Sleep Firmware (C++)",
+        "code": "/**\n * ============================================================================\n * SmartGrid IoT: Industrial Environmental Automation Node Firmware\n * ============================================================================\n * Developer: Mohamed Seddik Feki <fekiseddik@gmail.com>\n * Academic Profile: Bachelor of Robotics and Automation Engineering (Honours)\n * Institution: Xiamen University Malaysia (XMUM)\n * License: MIT\n * \n * Target Microcontroller: ESP32-WROOM-32D (Tensilica Xtensa LX6 Dual-Core)\n * Framework: ESP-IDF / Arduino-ESP32\n * \n * Functional Architecture:\n * 1. Multi-Sensor Fusion Filter (1D Recursive Kalman & Variance-Weighted Fusion)\n * 2. Discrete Closed-Loop PID Controller with Anti-Windup & Low-Pass Filtered Derivative\n * 3. Ultra-Low-Power Deep-Sleep Scheduling with RTC Memory State Preservation\n * 4. Hardware Fail-Safe Relay Interlock and Instantaneous PWM Actuator Cutoff\n * ============================================================================\n */\n\n#include <Arduino.h>\n#include <esp_sleep.h>\n#include <driver/ledc.h>\n#include <math.h>\n\n// ============================================================================\n// HARDWARE PIN ASSIGNMENTS & ELECTRICAL SPECIFICATIONS\n// ============================================================================\nnamespace HardwareConfig {\n    // Actuator & Safety Interlock Pins\n    constexpr uint8_t PIN_HEATER_PWM          = 18; // LEDC Ch 0 -> IRLZ44N Logic-Level Power MOSFET\n    constexpr uint8_t PIN_FAILSAFE_RELAY      = 27; // SPDT Industrial Relay Interlock (Active HIGH)\n    constexpr uint8_t PIN_STATUS_LED          = 2;  // Onboard Diagnostic LED (Active HIGH)\n\n    // Redundant Analog Sensor ADC Channels (ESP32 ADC1: No WiFi Conflict)\n    // Note: GPIO 34, 35, 36 are GPI input-only pins without internal pull-ups/pull-downs.\n    constexpr uint8_t PIN_PRIMARY_TEMP_ADC    = 34; // ADC1_CH6: Primary Analog Temperature Sensor (TMP36)\n    constexpr uint8_t PIN_SECONDARY_TEMP_ADC  = 35; // ADC1_CH7: Secondary Analog Temperature Sensor (Redundant)\n    constexpr uint8_t PIN_BATTERY_SENSE       = 36; // ADC1_CH0: Battery Voltage Divider (100k / 100k)\n\n    // Hardware PWM Configuration (ESP32 LEDC Driver)\n    constexpr uint8_t  PWM_CHANNEL            = 0;\n    constexpr uint32_t PWM_FREQ_HZ            = 5000; // 5 kHz PWM frequency for silent inductive switching\n    constexpr uint8_t  PWM_RESOLUTION_BITS    = 8;    // 8-bit resolution (0 - 255)\n    constexpr uint32_t PWM_MAX_DUTY           = 255;\n\n    // ADC Electrical Parameters (12-bit ADC, 0 - 3.3V reference)\n    constexpr float ADC_VREF_VOLTS            = 3.3f;\n    constexpr float ADC_MAX_COUNTS            = 4095.0f;\n    constexpr float VOLTAGE_DIVIDER_RATIO     = 2.0f; // 100k / 100k divider for Li-ion battery monitoring\n}\n\n// ============================================================================\n// OPERATIONAL THRESHOLDS & CONTROL TUNING CONSTANTS\n// ============================================================================\nnamespace SystemTuning {\n    // Temperature Setpoint & Closed-Loop Precision Bounds\n    constexpr float NOMINAL_SETPOINT_C        = 24.0f; // Nominal zone target: 24.0°C\n    constexpr float TOLERANCE_PERCENT         = 1.5f;  // Precision requirement: +/- 1.5% of setpoint\n    constexpr float CRITICAL_MAX_TEMP_C       = 75.0f; // High temperature emergency trip threshold\n    constexpr float CRITICAL_MIN_TEMP_C       = 0.0f;  // Sub-zero freezing emergency trip threshold\n    constexpr float MAX_SLEW_RATE_C_PER_SEC   = 4.0f;  // Maximum plausible thermal rate of change\n    constexpr float SENSOR_DISCREPANCY_MAX_C  = 5.0f;  // Sensor divergence threshold between S1 and S2\n\n    // PID Controller Parameters\n    constexpr float DEFAULT_KP                = 6.5f;  // Proportional gain\n    constexpr float DEFAULT_KI                = 1.2f;  // Integral gain (1/s)\n    constexpr float DEFAULT_KD                = 2.8f;  // Derivative gain (s)\n    constexpr float INTEGRAL_ANTI_WINDUP_MAX  = 40.0f; // Clamped maximum integral contribution (%)\n    constexpr float DERIVATIVE_FILTER_ALPHA   = 0.70f; // First-order low-pass filter smoothing coefficient\n\n    // Multi-Sensor Variance & Kalman Noise Covariances\n    constexpr float SENSOR_1_VARIANCE         = 0.0400f; // Primary sensor variance (sigma1 = 0.20°C)\n    constexpr float SENSOR_2_VARIANCE         = 0.1225f; // Secondary sensor variance (sigma2 = 0.35°C)\n    constexpr float KALMAN_PROCESS_NOISE_Q    = 0.0050f; // Discrete thermal process disturbance covariance\n\n    // Ultra-Low-Power Sleep Timing Specifications\n    constexpr uint64_t SLEEP_INTERVAL_SECONDS = 60ULL;   // 60-second deep-sleep interval\n    constexpr uint64_t U_SEC_TO_SEC_FACTOR    = 1000000ULL;\n}\n\n// ============================================================================\n// NON-VOLATILE RTC SLOW MEMORY VARIABLE ALLOCATION\n// Variables survive ESP32 deep-sleep hardware resets\n// ============================================================================\nRTC_DATA_ATTR static uint32_t rtc_boot_count               = 0;\nRTC_DATA_ATTR static float    rtc_last_process_variable    = SystemTuning::NOMINAL_SETPOINT_C;\nRTC_DATA_ATTR static float    rtc_pid_integral             = 0.0f;\nRTC_DATA_ATTR static float    rtc_kalman_state             = SystemTuning::NOMINAL_SETPOINT_C;\nRTC_DATA_ATTR static float    rtc_kalman_covariance        = 1.0f;\nRTC_DATA_ATTR static bool     rtc_failsafe_latched         = false;\nRTC_DATA_ATTR static uint32_t rtc_consecutive_anomalies    = 0;\nRTC_DATA_ATTR static uint32_t rtc_cumulative_active_ms     = 0;\n\n// ============================================================================\n// DATA STRUCTURES & ALGORITHMIC MODULES\n// ============================================================================\n\n/**\n * @brief 1D Recursive Discrete Kalman Filter with Variance-Weighted Sensor Fusion\n * Fuses redundant analog temperature sensor observations to produce minimum-variance estimate.\n */\nstruct MultiSensorKalmanFilter {\n    float state_estimate;    // Current state temperature estimate x_hat (°C)\n    float error_covariance;  // Current estimation error covariance P\n    float process_noise_q;   // Process disturbance covariance Q\n    float var_sensor_1;      // Primary sensor variance sigma_1^2\n    float var_sensor_2;      // Secondary sensor variance sigma_2^2\n\n    void init(float initial_temp, float initial_p, float q, float var1, float var2) {\n        state_estimate   = initial_temp;\n        error_covariance = initial_p;\n        process_noise_q  = q;\n        var_sensor_1     = var1;\n        var_sensor_2     = var2;\n    }\n\n    /**\n     * @brief Computes variance-weighted optimal linear observation combining S1 and S2\n     * @param z1 Primary sensor reading (°C)\n     * @param z2 Secondary redundant reading (°C)\n     * @param out_fused_reading Pointer to store combined observation (°C)\n     * @param out_fused_variance Pointer to store combined observation variance (°C^2)\n     * @return true if sensors are consistent (discrepancy <= 5.0°C), false if anomaly detected\n     */\n    bool fuseObservations(float z1, float z2, float* out_fused_reading, float* out_fused_variance) {\n        float discrepancy = fabsf(z1 - z2);\n        bool consistent = (discrepancy <= SystemTuning::SENSOR_DISCREPANCY_MAX_C);\n\n        // Optimal variance-weighted combination:\n        // w1 = var2 / (var1 + var2), w2 = var1 / (var1 + var2)\n        float total_variance = var_sensor_1 + var_sensor_2;\n        float w1 = var_sensor_2 / total_variance;\n        float w2 = var_sensor_1 / total_variance;\n\n        *out_fused_reading = (w1 * z1) + (w2 * z2);\n        *out_fused_variance = (var_sensor_1 * var_sensor_2) / total_variance;\n\n        return consistent;\n    }\n\n    /**\n     * @brief Executes discrete Kalman Predict and Update cycle\n     * @param z_fused Fused observation (°C)\n     * @param r_fused Observation variance (°C^2)\n     * @return Updated state estimate x_hat_k (°C)\n     */\n    float step(float z_fused, float r_fused) {\n        // 1. Time Update (Predict)\n        // x_hat_priori = x_hat_posteriori (assumes constant thermal state across micro-step)\n        float p_priori = error_covariance + process_noise_q;\n\n        // 2. Measurement Update (Correct)\n        // Kalman Gain: K = P_priori / (P_priori + R_fused)\n        float kalman_gain = p_priori / (p_priori + r_fused);\n\n        // State update: x_hat = x_hat_priori + K * (z_fused - x_hat_priori)\n        state_estimate = state_estimate + kalman_gain * (z_fused - state_estimate);\n\n        // Covariance update: P = (1 - K) * P_priori\n        error_covariance = (1.0f - kalman_gain) * p_priori;\n\n        return state_estimate;\n    }\n};\n\n/**\n * @brief Discrete Closed-Loop PID Controller with Anti-Windup Clamping & Low-Pass Filtered Derivative\n * Maintains environmental process variable within +/- 1.5% of target setpoint.\n */\nstruct PIDController {\n    float kp;\n    float ki;\n    float kd;\n    float setpoint;\n    float integral;\n    float max_integral;\n    float prev_error;\n    float filtered_derivative;\n    float derivative_alpha;\n    float min_output;\n    float max_output;\n\n    void init(float p, float i, float d, float sp, float max_i, float alpha, float out_min, float out_max) {\n        kp                  = p;\n        ki                  = i;\n        kd                  = d;\n        setpoint            = sp;\n        integral            = 0.0f;\n        max_integral        = max_i;\n        prev_error          = 0.0f;\n        filtered_derivative = 0.0f;\n        derivative_alpha    = alpha;\n        min_output          = out_min;\n        max_output          = out_max;\n    }\n\n    void reset() {\n        integral            = 0.0f;\n        prev_error          = 0.0f;\n        filtered_derivative = 0.0f;\n    }\n\n    /**\n     * @brief Computes control effort with anti-windup clamping and filtered derivative\n     * @param measured Current process variable (°C)\n     * @param dt Time delta (seconds)\n     * @return Clamped control effort [min_output, max_output] in percent (%)\n     */\n    float compute(float target, float measured, float dt) {\n        if (!isfinite(target) || !isfinite(measured) || dt <= 0.0f) {\n            return 0.0f;\n        }\n\n        setpoint = target;\n        float error = setpoint - measured;\n\n        // 1. Proportional Term\n        float p_term = kp * error;\n\n        // 2. Integral Term with Clamping Anti-Windup\n        integral += error * dt;\n        if (integral > max_integral) {\n            integral = max_integral;\n        } else if (integral < -max_integral) {\n            integral = -max_integral;\n        }\n        float i_term = ki * integral;\n\n        // 3. Low-Pass Filtered Derivative Action\n        // Prevents derivative kick and attenuates high-frequency sensor noise\n        float raw_derivative = (error - prev_error) / dt;\n        filtered_derivative = (derivative_alpha * filtered_derivative) + ((1.0f - derivative_alpha) * raw_derivative);\n        prev_error = error;\n        float d_term = kd * filtered_derivative;\n\n        // 4. Summation and Output Clamping\n        float output = p_term + i_term + d_term;\n        if (output > max_output) {\n            output = max_output;\n        } else if (output < min_output) {\n            output = min_output;\n        }\n\n        return output;\n    }\n\n    /**\n     * @brief Evaluates whether process variable is within +/- 1.5% tolerance of setpoint\n     * @param measured Current process variable\n     * @return true if within tolerance, false otherwise\n     */\n    bool isWithinTolerance(float measured) const {\n        if (fabsf(setpoint) < 0.0001f) {\n            return fabsf(measured - setpoint) <= 0.05f;\n        }\n        float deviation_percent = (fabsf(measured - setpoint) / fabsf(setpoint)) * 100.0f;\n        return (deviation_percent <= SystemTuning::TOLERANCE_PERCENT);\n    }\n};\n\n/**\n * @brief Hardware Fail-Safe Interlock and Cutoff State Machine\n * De-energizes mechanical relay and clamps PWM to 0% upon anomaly or thermal runaway.\n */\nstruct HardwareFailSafeInterlock {\n    bool is_latched;\n    uint32_t consecutive_discrepancies;\n\n    void init(bool previously_latched, uint32_t prior_anomalies) {\n        is_latched = previously_latched;\n        consecutive_discrepancies = prior_anomalies;\n    }\n\n    /**\n     * @brief Evaluates safety conditions and enforces cutoff if tripped\n     * @param process_var Current fused temperature (°C)\n     * @param temp_s1 Raw sensor 1 temperature (°C)\n     * @param temp_s2 Raw sensor 2 temperature (°C)\n     * @param dt Time delta (seconds)\n     * @param prev_temp Previous temperature for slew rate check (°C)\n     * @return true if safe to operate, false if fail-safe interlock is triggered/latched\n     */\n    bool evaluate(float process_var, float temp_s1, float temp_s2, float dt, float prev_temp) {\n        if (is_latched) {\n            enforceHardwareCutoff();\n            return false;\n        }\n\n        // Check 1: Critical High / Low Temperature Exceeded\n        if (process_var > SystemTuning::CRITICAL_MAX_TEMP_C || process_var < SystemTuning::CRITICAL_MIN_TEMP_C) {\n            tripInterlock();\n            return false;\n        }\n\n        // Check 2: Thermal Runaway Rate of Change (|dT/dt| > 4.0°C/s)\n        if (dt > 0.0f) {\n            float slew_rate = fabsf(process_var - prev_temp) / dt;\n            if (slew_rate > SystemTuning::MAX_SLEW_RATE_C_PER_SEC) {\n                tripInterlock();\n                return false;\n            }\n        }\n\n        // Check 3: Sensor Discrepancy (|S1 - S2| > 5.0°C for >= 3 consecutive cycles)\n        float sensor_diff = fabsf(temp_s1 - temp_s2);\n        if (sensor_diff > SystemTuning::SENSOR_DISCREPANCY_MAX_C) {\n            consecutive_discrepancies++;\n            if (consecutive_discrepancies >= 3) {\n                tripInterlock();\n                return false;\n            }\n        } else {\n            consecutive_discrepancies = 0;\n        }\n\n        // System safe: Energize safety relay, enable normal PWM operation\n        armInterlock();\n        return true;\n    }\n\n    void tripInterlock() {\n        is_latched = true;\n        enforceHardwareCutoff();\n    }\n\n    void resetInterlock() {\n        is_latched = false;\n        consecutive_discrepancies = 0;\n        armInterlock();\n    }\n\n    void enforceHardwareCutoff() {\n        // Immediate Cutoff: De-energize safety relay (interlock open)\n        digitalWrite(HardwareConfig::PIN_FAILSAFE_RELAY, LOW);\n\n        // Clamp hardware PWM to 0% duty\n        ledcWrite(HardwareConfig::PWM_CHANNEL, 0);\n\n        // Turn on Alarm LED\n        digitalWrite(HardwareConfig::PIN_STATUS_LED, HIGH);\n    }\n\n    void armInterlock() {\n        // Energize safety relay (interlock closed)\n        digitalWrite(HardwareConfig::PIN_FAILSAFE_RELAY, HIGH);\n\n        // Turn off Alarm LED\n        digitalWrite(HardwareConfig::PIN_STATUS_LED, LOW);\n    }\n};\n\n// ============================================================================\n// SYSTEM INSTANCES\n// ============================================================================\nstatic MultiSensorKalmanFilter   g_kalman_filter;\nstatic PIDController             g_pid_controller;\nstatic HardwareFailSafeInterlock g_failsafe;\n\n// ============================================================================\n// HELPER FUNCTIONS: SENSOR READING & CONVERSION\n// ============================================================================\n\n/**\n * @brief Reads analog temperature from TMP36 or calibrated analog sensor\n * Conversion: V_out = (ADC_count / 4095.0) * 3.3V\n * Temp = (V_out - 0.5V) * 100.0 °C/V (TMP36 standard transfer function)\n */\nfloat readAnalogTemperature(uint8_t pin) {\n    uint32_t raw_adc = analogRead(pin);\n    float voltage = (static_cast<float>(raw_adc) / HardwareConfig::ADC_MAX_COUNTS) * HardwareConfig::ADC_VREF_VOLTS;\n    float temperature = (voltage - 0.5f) * 100.0f;\n    return temperature;\n}\n\n/**\n * @brief Reads Li-ion battery voltage via resistor divider\n * Range: 3.0V (0% empty) to 4.2V (100% full nominal Li-ion cell)\n */\nfloat readBatteryVoltage() {\n    uint32_t raw_adc = analogRead(HardwareConfig::PIN_BATTERY_SENSE);\n    float sensed_voltage = (static_cast<float>(raw_adc) / HardwareConfig::ADC_MAX_COUNTS) * HardwareConfig::ADC_VREF_VOLTS;\n    return sensed_voltage * HardwareConfig::VOLTAGE_DIVIDER_RATIO;\n}\n\n/**\n * @brief Ultra-Low-Power Deep-Sleep Entry Routine\n * Configures timer wakeup for 60 seconds and enters deep sleep.\n * Battery Autonomy Calculation:\n * - C_battery: 3000 mAh Li-ion (90% usable = 2700 mAh)\n * - I_active:  80.0 mA for T_active = 0.20 s\n * - I_sleep:   0.015 mA (15 uA) for T_sleep = 60.0 s\n * - I_avg = (80.0 * 0.20 + 0.015 * 60.0) / 60.20 = 0.2807 mA\n * - Autonomy = 2700 / (0.2807 * 24) = 400.7 days (> 185 days / > 6 months requirement)\n */\nvoid enterDeepSleep() {\n    // Preserve persistent states in RTC memory\n    rtc_boot_count++;\n    rtc_last_process_variable = g_kalman_filter.state_estimate;\n    rtc_pid_integral          = g_pid_controller.integral;\n    rtc_kalman_state          = g_kalman_filter.state_estimate;\n    rtc_kalman_covariance     = g_kalman_filter.error_covariance;\n    rtc_failsafe_latched      = g_failsafe.is_latched;\n    rtc_consecutive_anomalies = g_failsafe.consecutive_discrepancies;\n\n    // Flush serial outputs prior to sleep\n    Serial.flush();\n\n    // Configure deep-sleep timer wakeup (60 seconds)\n    esp_sleep_enable_timer_wakeup(SystemTuning::SLEEP_INTERVAL_SECONDS * SystemTuning::U_SEC_TO_SEC_FACTOR);\n\n    // Enter ultra-low-power deep sleep\n    esp_deep_sleep_start();\n}\n\n// ============================================================================\n// ARDUINO SETUP & CONTROL CYCLE EXECUTION\n// ============================================================================\nvoid setup() {\n    uint32_t start_wake_time = millis();\n    Serial.begin(115200);\n\n    // 1. Initialize GPIO Hardware Direction & Initial Safe States\n    pinMode(HardwareConfig::PIN_FAILSAFE_RELAY, OUTPUT);\n    digitalWrite(HardwareConfig::PIN_FAILSAFE_RELAY, LOW); // Safe default: Relay de-energized\n\n    pinMode(HardwareConfig::PIN_STATUS_LED, OUTPUT);\n    digitalWrite(HardwareConfig::PIN_STATUS_LED, LOW);\n\n    // Configure ADC precision (12-bit, 11dB attenuation for full 0-3.3V range)\n    analogReadResolution(12);\n    analogSetAttenuation(ADC_11db);\n\n    // 2. Configure Hardware PWM Timer (LEDC Peripheral)\n    ledcSetup(HardwareConfig::PWM_CHANNEL, HardwareConfig::PWM_FREQ_HZ, HardwareConfig::PWM_RESOLUTION_BITS);\n    ledcAttachPin(HardwareConfig::PIN_HEATER_PWM, HardwareConfig::PWM_CHANNEL);\n    ledcWrite(HardwareConfig::PWM_CHANNEL, 0); // Safe default: 0% duty\n\n    // 3. Inspect Deep-Sleep Wakeup Cause\n    esp_sleep_wakeup_cause_t wakeup_cause = esp_sleep_get_wakeup_cause();\n\n    // 4. Initialize Subsystem States (Restoring from RTC memory if waking from sleep)\n    float initial_temp = (wakeup_cause == ESP_SLEEP_WAKEUP_TIMER) ? rtc_kalman_state : SystemTuning::NOMINAL_SETPOINT_C;\n    float initial_cov  = (wakeup_cause == ESP_SLEEP_WAKEUP_TIMER) ? rtc_kalman_covariance : 1.0f;\n\n    g_kalman_filter.init(\n        initial_temp,\n        initial_cov,\n        SystemTuning::KALMAN_PROCESS_NOISE_Q,\n        SystemTuning::SENSOR_1_VARIANCE,\n        SystemTuning::SENSOR_2_VARIANCE\n    );\n\n    g_pid_controller.init(\n        SystemTuning::DEFAULT_KP,\n        SystemTuning::DEFAULT_KI,\n        SystemTuning::DEFAULT_KD,\n        SystemTuning::NOMINAL_SETPOINT_C,\n        SystemTuning::INTEGRAL_ANTI_WINDUP_MAX,\n        SystemTuning::DERIVATIVE_FILTER_ALPHA,\n        0.0f,\n        100.0f\n    );\n\n    if (wakeup_cause == ESP_SLEEP_WAKEUP_TIMER) {\n        g_pid_controller.integral = rtc_pid_integral;\n    }\n\n    g_failsafe.init(rtc_failsafe_latched, rtc_consecutive_anomalies);\n\n    // 5. Read Redundant Temperature Sensors\n    float raw_temp_s1 = readAnalogTemperature(HardwareConfig::PIN_PRIMARY_TEMP_ADC);\n    float raw_temp_s2 = readAnalogTemperature(HardwareConfig::PIN_SECONDARY_TEMP_ADC);\n    float battery_v   = readBatteryVoltage();\n\n    // 6. Perform Variance-Weighted Multi-Sensor Fusion\n    float fused_reading  = 0.0f;\n    float fused_variance = 0.0f;\n    bool sensors_consistent = g_kalman_filter.fuseObservations(raw_temp_s1, raw_temp_s2, &fused_reading, &fused_variance);\n\n    // 7. Execute Discrete 1D Kalman Filter Step\n    float process_variable = g_kalman_filter.step(fused_reading, fused_variance);\n\n    // 8. Evaluate Hardware Safety Interlock\n    float dt = (wakeup_cause == ESP_SLEEP_WAKEUP_TIMER) ? static_cast<float>(SystemTuning::SLEEP_INTERVAL_SECONDS) : 1.0f;\n    bool is_safe = g_failsafe.evaluate(process_variable, raw_temp_s1, raw_temp_s2, dt, rtc_last_process_variable);\n\n    // 9. Compute Closed-Loop PID Control Effort\n    float control_effort_pct = 0.0f;\n    uint32_t pwm_register_value = 0;\n\n    if (is_safe) {\n        control_effort_pct = g_pid_controller.compute(SystemTuning::NOMINAL_SETPOINT_C, process_variable, dt);\n        pwm_register_value = static_cast<uint32_t>(roundf((control_effort_pct / 100.0f) * HardwareConfig::PWM_MAX_DUTY));\n        ledcWrite(HardwareConfig::PWM_CHANNEL, pwm_register_value);\n    } else {\n        g_failsafe.enforceHardwareCutoff();\n    }\n\n    bool within_tolerance = g_pid_controller.isWithinTolerance(process_variable);\n\n    // 10. Transmit Industrial Telemetry Packet via UART / MQTT Bridge\n    uint32_t wake_duration_ms = millis() - start_wake_time;\n    rtc_cumulative_active_ms += wake_duration_ms;\n\n    Serial.printf(\n        \"{\\\"boot\\\":%u,\\\"s1\\\":%.2f,\\\"s2\\\":%.2f,\\\"pv\\\":%.2f,\\\"sp\\\":%.2f,\\\"pwm_pct\\\":%.1f,\"\n        \"\\\"pwm_reg\\\":%u,\\\"tol_ok\\\":%s,\\\"safe\\\":%s,\\\"v_bat\\\":%.2f,\\\"wake_ms\\\":%u}\\n\",\n        rtc_boot_count,\n        raw_temp_s1,\n        raw_temp_s2,\n        process_variable,\n        SystemTuning::NOMINAL_SETPOINT_C,\n        control_effort_pct,\n        pwm_register_value,\n        within_tolerance ? \"true\" : \"false\",\n        is_safe ? \"true\" : \"false\",\n        battery_v,\n        wake_duration_ms\n    );\n\n    // 11. Schedule Deep Sleep if in remote autonomous mode\n    // (Under testbench loop mode, delay and continue; in production battery node, enter deep sleep)\n    #ifndef CONTINUOUS_TEST_BENCH_MODE\n    enterDeepSleep();\n    #endif\n}\n\nvoid loop() {\n    // In continuous testbench mode (if defined), execute periodic control loop\n    delay(1000);\n}\n"
+      },
+      "anomaly": {
+        "filename": "edge_anomaly_detector.py",
+        "path": "src/edge_anomaly_detector.py",
+        "language": "python",
+        "title": "Python Edge Anomaly Detector & PID (Python)",
+        "code": "#!/usr/bin/env python3\n\"\"\"\n===============================================================================\nSmartGrid IoT: Edge Anomaly Detection, Closed-Loop PID & Battery Life Engine\n===============================================================================\nDeveloper: Mohamed Seddik Feki <fekiseddik@gmail.com>\nAcademic Profile: Bachelor of Robotics and Automation Engineering (Honours)\nInstitution: Xiamen University Malaysia (XMUM)\nLicense: MIT\n\nDescription:\nHigh-precision analytical engine implementing:\n1. ClosedLoopPIDController: Discrete PID with integral anti-windup clamping\n   and low-pass filtered derivative maintaining control within +/- 1.5%.\n2. EdgeAnomalyDetector: Sliding-window Z-score statistical outlier detection,\n   Exponentially Weighted Moving Average (EWMA), and Cumulative Sum (CUSUM)\n   calibration drift detection with automatic fail-safe actuator cutoff.\n3. BatteryLifeEstimator: Mathematical autonomy model evaluating active/sleep\n   duty cycles, verifying 6+ months (> 185 days) runtime on a 3000 mAh Li-ion cell.\n===============================================================================\n\"\"\"\n\nfrom collections import deque\nimport math\nfrom typing import Any, Dict, List, Optional\n\n\nclass ClosedLoopPIDController:\n    \"\"\"\n    Discrete Closed-Loop PID Controller with Integral Anti-Windup Clamping\n    and Low-Pass Filtered Derivative Action maintaining setpoint precision\n    within +/- 1.5%.\n    \"\"\"\n\n    def __init__(\n        self,\n        kp: float = 6.5,\n        ki: float = 1.2,\n        kd: float = 2.8,\n        setpoint: float = 24.0,\n        min_output: float = 0.0,\n        max_output: float = 100.0,\n        max_integral: float = 40.0,\n        derivative_filter_alpha: float = 0.70,\n        tolerance_pct: float = 1.5,\n    ) -> None:\n        self.kp = float(kp)\n        self.ki = float(ki)\n        self.kd = float(kd)\n        self.setpoint = float(setpoint)\n        self.min_output = float(min_output)\n        self.max_output = float(max_output)\n        self.max_integral = float(max_integral)\n        self.derivative_filter_alpha = float(derivative_filter_alpha)\n        self.tolerance_pct = float(tolerance_pct)\n\n        self.integral: float = 0.0\n        self.prev_error: float = 0.0\n        self.filtered_derivative: float = 0.0\n        self.last_output: float = 0.0\n\n    def reset(self) -> None:\n        \"\"\"Resets integral and derivative accumulators to initial state.\"\"\"\n        self.integral = 0.0\n        self.prev_error = 0.0\n        self.filtered_derivative = 0.0\n        self.last_output = 0.0\n\n    def set_setpoint(self, new_setpoint: float) -> None:\n        \"\"\"Safely updates target setpoint without resetting accumulators.\"\"\"\n        if math.isfinite(new_setpoint):\n            self.setpoint = float(new_setpoint)\n\n    def update(self, measured_value: float, dt: float = 1.0) -> float:\n        \"\"\"\n        Computes discrete PID control effort with anti-windup clamping and low-pass filtered derivative.\n        \n        :param measured_value: Current process variable (e.g. Temperature in °C)\n        :param dt: Time delta in seconds (must be positive and finite)\n        :return: Clamped control effort in range [min_output, max_output] (%)\n        \"\"\"\n        if not math.isfinite(measured_value) or not math.isfinite(dt) or dt <= 0.0:\n            return 0.0\n\n        error = self.setpoint - measured_value\n\n        # 1. Proportional Term\n        p_term = self.kp * error\n\n        # 2. Integral Term with Clamping Anti-Windup\n        self.integral += error * dt\n        if self.integral > self.max_integral:\n            self.integral = self.max_integral\n        elif self.integral < -self.max_integral:\n            self.integral = -self.max_integral\n        i_term = self.ki * self.integral\n\n        # 3. Low-Pass Filtered Derivative Action\n        # Attenuates high-frequency sensor noise and prevents derivative kick\n        raw_derivative = (error - self.prev_error) / dt\n        self.filtered_derivative = (\n            (self.derivative_filter_alpha * self.filtered_derivative)\n            + ((1.0 - self.derivative_filter_alpha) * raw_derivative)\n        )\n        self.prev_error = error\n        d_term = self.kd * self.filtered_derivative\n\n        # 4. Summation and Actuator Bound Clamping\n        unclamped_output = p_term + i_term + d_term\n        clamped_output = max(self.min_output, min(self.max_output, unclamped_output))\n        self.last_output = clamped_output\n\n        return clamped_output\n\n    def is_within_tolerance(self, measured_value: float) -> bool:\n        \"\"\"\n        Evaluates whether process variable is within target tolerance (+/- 1.5% of setpoint).\n        \"\"\"\n        if not math.isfinite(measured_value):\n            return False\n        if abs(self.setpoint) < 1e-6:\n            return abs(measured_value - self.setpoint) <= 0.05\n\n        deviation_pct = (abs(measured_value - self.setpoint) / abs(self.setpoint)) * 100.0\n        return deviation_pct <= self.tolerance_pct\n\n    def get_diagnostics(self, measured_value: Optional[float] = None) -> Dict[str, Any]:\n        \"\"\"Returns internal state diagnostics dictionary.\"\"\"\n        current_val = measured_value if measured_value is not None else (self.setpoint - self.prev_error)\n        return {\n            \"setpoint\": self.setpoint,\n            \"measured_value\": current_val,\n            \"error\": self.setpoint - current_val,\n            \"integral\": self.integral,\n            \"filtered_derivative\": self.filtered_derivative,\n            \"last_output\": self.last_output,\n            \"within_tolerance\": self.is_within_tolerance(current_val),\n            \"tolerance_pct\": self.tolerance_pct,\n        }\n\n\nclass EdgeAnomalyDetector:\n    \"\"\"\n    Edge Anomaly Detector combining Sliding-Window Z-Score Outlier Detection,\n    EWMA Trend Smoothing, and CUSUM Persistent Drift Detection.\n    Automatically latches fail-safe actuator cutoff upon severe anomaly or drift.\n    \"\"\"\n\n    def __init__(\n        self,\n        window_size: int = 30,\n        z_threshold: float = 3.0,\n        z_critical: float = 5.0,\n        ewma_alpha: float = 0.20,\n        cusum_slack: float = 0.5,\n        cusum_threshold: float = 4.5,\n        critical_high: float = 75.0,\n        critical_low: float = 0.0,\n        baseline_mean: float = 24.0,\n        baseline_std: float = 0.20,\n    ) -> None:\n        self.window_size = max(5, int(window_size))\n        self.z_threshold = float(z_threshold)\n        self.z_critical = float(z_critical)\n        self.ewma_alpha = float(ewma_alpha)\n        self.cusum_slack = float(cusum_slack)\n        self.cusum_threshold = float(cusum_threshold)\n        self.critical_high = float(critical_high)\n        self.critical_low = float(critical_low)\n        self.baseline_mean = float(baseline_mean)\n        self.baseline_std = max(1e-4, float(baseline_std))\n\n        self.window: deque[float] = deque(maxlen=self.window_size)\n        self.ewma: Optional[float] = None\n        self.cusum_high: float = 0.0\n        self.cusum_low: float = 0.0\n        self.fail_safe_active: bool = False\n        self.trip_reason: Optional[str] = None\n        self.consecutive_outliers: int = 0\n\n    def reset_interlock(self) -> None:\n        \"\"\"Resets fail-safe interlock latch and restores normal monitoring.\"\"\"\n        self.fail_safe_active = False\n        self.trip_reason = None\n        self.cusum_high = 0.0\n        self.cusum_low = 0.0\n        self.consecutive_outliers = 0\n\n    def reset_failsafe(self) -> None:\n        \"\"\"Alias for reset_interlock.\"\"\"\n        self.reset_interlock()\n\n    def feed(self, value: float) -> Dict[str, Any]:\n        \"\"\"\n        Feeds a new sensor reading into the anomaly detection pipeline.\n        \n        :param value: Sensor reading (e.g. Temperature in °C)\n        :return: Detection report dictionary\n        \"\"\"\n        # 1. Guard against non-finite numerical inputs\n        if not math.isfinite(value):\n            self.fail_safe_active = True\n            self.trip_reason = \"NON_FINITE_INPUT\"\n            return {\n                \"value\": value,\n                \"z_score\": float(\"inf\"),\n                \"z_anomaly\": True,\n                \"ewma\": self.ewma or 0.0,\n                \"cusum_high\": self.cusum_high,\n                \"cusum_low\": self.cusum_low,\n                \"cusum_anomaly\": True,\n                \"fail_safe_active\": True,\n                \"actuator_cutoff\": True,\n                \"trip_reason\": self.trip_reason,\n            }\n\n        # 2. Check Critical Temperature Safety Bounds\n        if value > self.critical_high:\n            self.fail_safe_active = True\n            self.trip_reason = f\"CRITICAL_HIGH_TEMP_EXCEEDED: {value:.2f}°C > {self.critical_high:.2f}°C\"\n        elif value < self.critical_low:\n            self.fail_safe_active = True\n            self.trip_reason = f\"CRITICAL_LOW_TEMP_EXCEEDED: {value:.2f}°C < {self.critical_low:.2f}°C\"\n\n        # 3. Update Sliding-Window Statistics\n        self.window.append(value)\n        n = len(self.window)\n        mean = sum(self.window) / n\n        if n > 1:\n            variance = sum((x - mean) ** 2 for x in self.window) / (n - 1)\n            std_dev = math.sqrt(variance)\n        else:\n            std_dev = self.baseline_std\n\n        # 4. Standardized Z-Score Outlier Detection\n        # Safe zero-division guard when all window elements are identical\n        effective_sigma = std_dev if std_dev > 1e-5 else self.baseline_std\n        z_score = abs(value - mean) / effective_sigma\n        z_anomaly = z_score > self.z_threshold\n\n        if z_anomaly:\n            self.consecutive_outliers += 1\n        else:\n            self.consecutive_outliers = 0\n\n        # Critical single spike or persistent outliers trigger fail-safe\n        if z_score >= self.z_critical or self.consecutive_outliers >= 3:\n            self.fail_safe_active = True\n            if self.trip_reason is None:\n                self.trip_reason = f\"Z_SCORE_ANOMALY_EXCEEDED: Z={z_score:.2f} > {self.z_critical:.2f}\"\n\n        # 5. Exponentially Weighted Moving Average (EWMA)\n        if self.ewma is None:\n            self.ewma = value\n        else:\n            self.ewma = (self.ewma_alpha * value) + ((1.0 - self.ewma_alpha) * self.ewma)\n\n        # 6. Cumulative Sum (CUSUM) Calibration Drift Detection\n        # Tracks persistent low-amplitude systematic shifts: k = slack * sigma_0, h = threshold * sigma_0\n        k = self.cusum_slack * self.baseline_std\n        h = self.cusum_threshold * self.baseline_std\n\n        self.cusum_high = max(0.0, self.cusum_high + (value - self.baseline_mean - k))\n        self.cusum_low = max(0.0, self.cusum_low - (value - self.baseline_mean + k))\n        cusum_anomaly = (self.cusum_high > h) or (self.cusum_low > h)\n\n        if cusum_anomaly:\n            self.fail_safe_active = True\n            if self.trip_reason is None:\n                self.trip_reason = (\n                    f\"CUSUM_CALIBRATION_DRIFT: Sh={self.cusum_high:.3f}, Sl={self.cusum_low:.3f} > {h:.3f}\"\n                )\n\n        return {\n            \"value\": value,\n            \"window_mean\": mean,\n            \"window_std\": std_dev,\n            \"z_score\": z_score,\n            \"z_anomaly\": z_anomaly,\n            \"ewma\": self.ewma,\n            \"cusum_high\": self.cusum_high,\n            \"cusum_low\": self.cusum_low,\n            \"cusum_anomaly\": cusum_anomaly,\n            \"fail_safe_active\": self.fail_safe_active,\n            \"actuator_cutoff\": self.fail_safe_active,\n            \"trip_reason\": self.trip_reason,\n        }\n\n\nclass BatteryLifeEstimator:\n    \"\"\"\n    IoT Battery Autonomy Estimator modeling active/sleep duty cycles,\n    quiescent currents, and battery derating over 6+ months runtime.\n    \"\"\"\n\n    def __init__(\n        self,\n        battery_capacity_mah: float = 3000.0,\n        active_current_ma: float = 80.0,\n        sleep_current_ua: float = 15.0,\n        active_duration_ms: float = 200.0,\n        sleep_interval_s: float = 60.0,\n        usable_capacity_ratio: float = 0.90,\n    ) -> None:\n        self.battery_capacity_mah = max(100.0, float(battery_capacity_mah))\n        self.active_current_ma = max(1.0, float(active_current_ma))\n        self.sleep_current_ua = max(0.1, float(sleep_current_ua))\n        self.active_duration_ms = max(1.0, float(active_duration_ms))\n        self.sleep_interval_s = max(1.0, float(sleep_interval_s))\n        self.usable_capacity_ratio = max(0.5, min(1.0, float(usable_capacity_ratio)))\n\n    def calculate_average_current_ma(self) -> float:\n        \"\"\"\n        Computes weighted average current consumption per wake/sleep cycle:\n        I_avg = (I_active * T_active + I_sleep * T_sleep) / (T_active + T_sleep)\n        \"\"\"\n        t_active_sec = self.active_duration_ms / 1000.0\n        t_sleep_sec = self.sleep_interval_s\n        t_cycle = t_active_sec + t_sleep_sec\n\n        sleep_current_ma = self.sleep_current_ua / 1000.0\n\n        q_active = self.active_current_ma * t_active_sec  # mA * s\n        q_sleep = sleep_current_ma * t_sleep_sec          # mA * s\n        q_total = q_active + q_sleep\n\n        return q_total / t_cycle\n\n    def calculate_runtime_hours(self) -> float:\n        \"\"\"Computes autonomous operating runtime in hours.\"\"\"\n        usable_mah = self.battery_capacity_mah * self.usable_capacity_ratio\n        i_avg = self.calculate_average_current_ma()\n        if i_avg <= 0.0:\n            return float(\"inf\")\n        return usable_mah / i_avg\n\n    def calculate_runtime_days(self) -> float:\n        \"\"\"Computes autonomous operating runtime in days.\"\"\"\n        return self.calculate_runtime_hours() / 24.0\n\n    def calculate_runtime_months(self) -> float:\n        \"\"\"Computes autonomous operating runtime in months (30.4375 days/month).\"\"\"\n        return self.calculate_runtime_days() / 30.4375\n\n    def meets_six_month_target(self) -> bool:\n        \"\"\"Verifies whether battery autonomy satisfies the 6-month (>= 185 days) requirement.\"\"\"\n        return self.calculate_runtime_days() >= 185.0\n\n    def find_minimum_sleep_interval(self, target_days: float = 185.0) -> float:\n        \"\"\"\n        Calculates the minimum required sleep interval in seconds to satisfy target days.\n        \"\"\"\n        usable_mah = self.battery_capacity_mah * self.usable_capacity_ratio\n        max_avg_current = usable_mah / (target_days * 24.0)\n\n        t_act = self.active_duration_ms / 1000.0\n        i_act = self.active_current_ma\n        i_slp = self.sleep_current_ua / 1000.0\n\n        # max_avg_current = (i_act * t_act + i_slp * t_slp) / (t_act + t_slp)\n        # max_avg_current * (t_act + t_slp) = i_act * t_act + i_slp * t_slp\n        # t_slp * (max_avg_current - i_slp) = t_act * (i_act - max_avg_current)\n        denominator = max_avg_current - i_slp\n        if denominator <= 0:\n            return float(\"inf\")\n\n        t_slp = (t_act * (i_act - max_avg_current)) / denominator\n        return max(1.0, t_slp)\n\n    def get_detailed_summary(self) -> Dict[str, Any]:\n        \"\"\"Provides full breakdown of energy budget, daily consumption, and lifespans.\"\"\"\n        i_avg = self.calculate_average_current_ma()\n        days = self.calculate_runtime_days()\n        months = self.calculate_runtime_months()\n        daily_consumption = i_avg * 24.0\n        meets_target = self.meets_six_month_target()\n\n        return {\n            \"battery_nominal_mah\": self.battery_capacity_mah,\n            \"usable_capacity_mah\": self.battery_capacity_mah * self.usable_capacity_ratio,\n            \"active_current_ma\": self.active_current_ma,\n            \"sleep_current_ua\": self.sleep_current_ua,\n            \"active_duration_ms\": self.active_duration_ms,\n            \"sleep_interval_s\": self.sleep_interval_s,\n            \"average_current_ma\": i_avg,\n            \"average_current_ua\": i_avg * 1000.0,\n            \"daily_consumption_mah\": daily_consumption,\n            \"autonomy_hours\": self.calculate_runtime_hours(),\n            \"autonomy_days\": days,\n            \"autonomy_months\": months,\n            \"meets_185_day_target\": meets_target,\n        }\n"
+      },
+      "broker": {
+        "filename": "mqtt_telemetry_broker.py",
+        "path": "src/mqtt_telemetry_broker.py",
+        "language": "python",
+        "title": "MQTT Telemetry Topic Router & Bridge (Python)",
+        "code": "#!/usr/bin/env python3\n\"\"\"\n===============================================================================\nSmartGrid IoT: Industrial MQTT Telemetry Broker Bridge & Topic Router\n===============================================================================\nDeveloper: Mohamed Seddik Feki <fekiseddik@gmail.com>\nAcademic Profile: Bachelor of Robotics and Automation Engineering (Honours)\nInstitution: Xiamen University Malaysia (XMUM)\nLicense: MIT\n\nDescription:\nHigh-reliability MQTT messaging and telemetry routing engine implementing:\n1. MqttTopicRouter: Hierarchical topic matching with OASIS MQTT v3.1.1 / v5.0\n   single-level (+) and multi-level (#) wildcards.\n2. SmartGridMqttBridge: QoS 0/1/2 packet formatting and lifecycle state machine,\n   retained message store, client session heartbeats, and Last Will &\n   Testament (LWT) automated fail-safe alert publishing on timeout.\n===============================================================================\n\"\"\"\n\nfrom collections import defaultdict\nimport json\nimport math\nimport time\nfrom typing import Any, Callable, Dict, List, Optional, Set, Tuple\n\n\nclass MqttTopicRouter:\n    \"\"\"\n    Robust MQTT Topic Router supporting single-level '+' and multi-level '#'\n    wildcard subscription matching and payload dispatching.\n    \"\"\"\n\n    def __init__(self) -> None:\n        # Map: subscription_pattern -> list of callback callables\n        self._subscriptions: Dict[str, List[Callable[[str, Any], Any]]] = defaultdict(list)\n\n    @staticmethod\n    def match_topic(subscription_pattern: str, published_topic: str) -> bool:\n        \"\"\"\n        Evaluates whether a published topic matches a subscription pattern per MQTT spec.\n        \n        Rules:\n        - '+' matches exactly one topic level.\n        - '#' matches any number of trailing levels (must be the final segment).\n        - Exact strings match verbatim.\n        - Leading '$' topics (system topics) are reserved and do not match wildcards at root.\n        \"\"\"\n        if not subscription_pattern or not published_topic:\n            return False\n\n        # Guard against system topic leakage with wildcards\n        if published_topic.startswith(\"$\") and not subscription_pattern.startswith(\"$\"):\n            return False\n\n        if subscription_pattern == published_topic:\n            return True\n\n        if subscription_pattern == \"#\":\n            return True\n\n        sub_parts = subscription_pattern.split(\"/\")\n        pub_parts = published_topic.split(\"/\")\n\n        sub_len = len(sub_parts)\n        pub_len = len(pub_parts)\n\n        i = 0\n        while i < sub_len:\n            sub = sub_parts[i]\n            if sub == \"#\":\n                # '#' must be the last character in the pattern\n                return i == sub_len - 1\n\n            if i >= pub_len:\n                return False\n\n            pub = pub_parts[i]\n            if sub != \"+\" and sub != pub:\n                return False\n\n            i += 1\n\n        return i == pub_len\n\n    def subscribe(self, pattern: str, callback: Callable[[str, Any], Any]) -> None:\n        \"\"\"Subscribes a callback to a topic pattern.\"\"\"\n        if not pattern or not callable(callback):\n            return\n        if callback not in self._subscriptions[pattern]:\n            self._subscriptions[pattern].append(callback)\n\n    def unsubscribe(self, pattern: str, callback: Optional[Callable[[str, Any], Any]] = None) -> bool:\n        \"\"\"Unsubscribes a callback from a pattern, or removes all callbacks for the pattern.\"\"\"\n        if pattern not in self._subscriptions:\n            return False\n\n        if callback is None:\n            del self._subscriptions[pattern]\n            return True\n\n        if callback in self._subscriptions[pattern]:\n            self._subscriptions[pattern].remove(callback)\n            if not self._subscriptions[pattern]:\n                del self._subscriptions[pattern]\n            return True\n\n        return False\n\n    def dispatch(self, topic: str, payload: Any) -> List[Any]:\n        \"\"\"\n        Dispatches a message on topic to all matching subscription patterns.\n        Returns a list of results returned by invoked callbacks.\n        \"\"\"\n        results = []\n        for pattern, callbacks in list(self._subscriptions.items()):\n            if self.match_topic(pattern, topic):\n                for cb in callbacks:\n                    try:\n                        res = cb(topic, payload)\n                        results.append(res)\n                    except Exception as err:\n                        results.append({\"error\": str(err), \"pattern\": pattern, \"topic\": topic})\n        return results\n\n    def get_subscriptions(self) -> List[str]:\n        \"\"\"Returns list of all active subscription patterns.\"\"\"\n        return list(self._subscriptions.keys())\n\n\nclass SmartGridMqttBridge:\n    \"\"\"\n    Industrial SmartGrid MQTT Bridge handling QoS 0/1/2 packets,\n    retained message store, client heartbeats, and Last Will & Testament (LWT)\n    offline detection.\n    \"\"\"\n\n    def __init__(self, broker_name: str = \"SmartGrid-EdgeBroker-01\") -> None:\n        self.broker_name = broker_name\n        self.router = MqttTopicRouter()\n\n        # In-memory Retained Message Store: topic -> packet_dict\n        self._retained_store: Dict[str, Dict[str, Any]] = {}\n\n        # Client Sessions: client_id -> session_info\n        self._clients: Dict[str, Dict[str, Any]] = {}\n\n        # Packet counter for QoS 1 and 2 unique message IDs\n        self._next_packet_id: int = 1\n\n        # QoS 2 Handshake Tracking: packet_id -> status ('RECEIVED', 'RELEASED', 'COMPLETED')\n        self._qos2_states: Dict[int, str] = {}\n\n    def _generate_packet_id(self) -> int:\n        pid = self._next_packet_id\n        self._next_packet_id = (self._next_packet_id % 65535) + 1\n        return pid\n\n    def register_client(\n        self,\n        client_id: str,\n        keep_alive: int = 60,\n        will_topic: str = \"\",\n        will_payload: str = \"\",\n        will_qos: int = 0,\n        will_retain: bool = False,\n    ) -> Dict[str, Any]:\n        \"\"\"\n        Registers or updates an IoT client session with optional Last Will & Testament.\n        \"\"\"\n        if not client_id:\n            raise ValueError(\"client_id cannot be empty\")\n\n        now = time.time()\n        session = {\n            \"client_id\": client_id,\n            \"keep_alive\": max(5, int(keep_alive)),\n            \"last_seen\": now,\n            \"online\": True,\n            \"subscriptions\": set(),\n            \"will\": {\n                \"topic\": will_topic,\n                \"payload\": will_payload,\n                \"qos\": will_qos if will_qos in (0, 1, 2) else 0,\n                \"retain\": bool(will_retain),\n            } if will_topic else None,\n        }\n\n        self._clients[client_id] = session\n        return {\n            \"client_id\": client_id,\n            \"status\": \"CONNECTED\",\n            \"session_present\": False,\n            \"timestamp\": now,\n        }\n\n    def ping(self, client_id: str) -> bool:\n        \"\"\"Records a heartbeat / ping from a client.\"\"\"\n        if client_id in self._clients:\n            self._clients[client_id][\"last_seen\"] = time.time()\n            self._clients[client_id][\"online\"] = True\n            return True\n        return False\n\n    def heartbeat(self, client_id: str) -> bool:\n        \"\"\"Alias for ping.\"\"\"\n        return self.ping(client_id)\n\n    def subscribe(\n        self,\n        client_id: str,\n        pattern: str,\n        callback: Callable[[str, Any], Any],\n    ) -> List[Dict[str, Any]]:\n        \"\"\"\n        Subscribes a client to a topic pattern and immediately dispatches\n        any matching retained messages.\n        \"\"\"\n        if client_id not in self._clients:\n            self.register_client(client_id)\n\n        self._clients[client_id][\"subscriptions\"].add(pattern)\n        self.router.subscribe(pattern, callback)\n\n        # Check Retained Message Store for immediate delivery\n        delivered_retained = []\n        for topic, packet in self._retained_store.items():\n            if MqttTopicRouter.match_topic(pattern, topic):\n                try:\n                    retained_packet = dict(packet)\n                    retained_packet[\"retained_delivery\"] = True\n                    callback(topic, retained_packet)\n                    delivered_retained.append(retained_packet)\n                except Exception:\n                    pass\n\n        return delivered_retained\n\n    def unsubscribe(self, client_id: str, pattern: str) -> bool:\n        \"\"\"Unsubscribes a client from a pattern.\"\"\"\n        if client_id in self._clients:\n            self._clients[client_id][\"subscriptions\"].discard(pattern)\n        return self.router.unsubscribe(pattern)\n\n    def publish(\n        self,\n        topic: str,\n        payload: Any,\n        qos: int = 0,\n        retain: bool = False,\n        client_id: str = \"\",\n    ) -> Dict[str, Any]:\n        \"\"\"\n        Publishes a telemetry or control message through the broker bridge.\n        \n        :param topic: Target MQTT topic string\n        :param payload: Data payload (string, dict, or numeric)\n        :param qos: Quality of Service (0, 1, or 2)\n        :param retain: If true, caches latest message for future subscribers\n        :param client_id: Originating client identifier\n        :return: Formatted MQTT packet dictionary\n        \"\"\"\n        if not topic:\n            raise ValueError(\"Topic cannot be empty\")\n        if \"+\" in topic or \"#\" in topic:\n            raise ValueError(\"Publish topic cannot contain wildcards ('+' or '#')\")\n\n        valid_qos = qos if qos in (0, 1, 2) else 0\n        now = time.time()\n        packet_id = self._generate_packet_id() if valid_qos > 0 else 0\n\n        # Serialize payload if necessary\n        formatted_payload = payload\n        if isinstance(payload, (dict, list)):\n            try:\n                formatted_payload = json.dumps(payload)\n            except Exception:\n                formatted_payload = str(payload)\n\n        packet: Dict[str, Any] = {\n            \"topic\": topic,\n            \"payload\": formatted_payload,\n            \"qos\": valid_qos,\n            \"retain\": bool(retain),\n            \"timestamp\": now,\n            \"packet_id\": packet_id,\n            \"sender_client_id\": client_id,\n        }\n\n        # Update Retained Store\n        if retain:\n            if formatted_payload == \"\" or formatted_payload is None:\n                # MQTT spec: empty payload on retained topic clears the retained message\n                self._retained_store.pop(topic, None)\n            else:\n                self._retained_store[topic] = packet\n\n        # Track QoS 2 initial publish\n        if valid_qos == 2:\n            self._qos2_states[packet_id] = \"RECEIVED\"\n\n        # Dispatch to active subscribers\n        self.router.dispatch(topic, packet)\n\n        return packet\n\n    def acknowledge_qos1(self, packet_id: int) -> Dict[str, Any]:\n        \"\"\"Generates PUBACK response for QoS 1 delivery.\"\"\"\n        return {\n            \"type\": \"PUBACK\",\n            \"packet_id\": packet_id,\n            \"status\": \"ACKNOWLEDGED\",\n            \"timestamp\": time.time(),\n        }\n\n    def handle_qos2_handshake(self, stage: str, packet_id: int) -> Dict[str, Any]:\n        \"\"\"\n        Executes 4-step QoS 2 handshake:\n        PUBLISH -> PUBREC (Received) -> PUBREL (Released) -> PUBCOMP (Complete).\n        \"\"\"\n        stage_upper = stage.upper()\n        if stage_upper == \"PUBREC\":\n            self._qos2_states[packet_id] = \"RECEIVED\"\n            return {\"type\": \"PUBREC\", \"packet_id\": packet_id, \"status\": \"RECEIVED\"}\n        elif stage_upper == \"PUBREL\":\n            self._qos2_states[packet_id] = \"RELEASED\"\n            return {\"type\": \"PUBREL\", \"packet_id\": packet_id, \"status\": \"RELEASED\"}\n        elif stage_upper == \"PUBCOMP\":\n            self._qos2_states[packet_id] = \"COMPLETED\"\n            return {\"type\": \"PUBCOMP\", \"packet_id\": packet_id, \"status\": \"COMPLETED\"}\n        else:\n            raise ValueError(f\"Unknown QoS 2 handshake stage: {stage}\")\n\n    def get_retained(self, topic: str) -> Optional[Dict[str, Any]]:\n        \"\"\"Retrieves retained message for a given topic.\"\"\"\n        return self._retained_store.get(topic)\n\n    def check_timeouts(self, current_time: Optional[float] = None) -> List[Dict[str, Any]]:\n        \"\"\"\n        Sweeps registered client sessions.\n        If a client exceeds (1.5 * keep_alive) without a ping:\n        - Marks client offline.\n        - Automatically publishes its registered Last Will & Testament (LWT) message.\n        \"\"\"\n        now = current_time if current_time is not None else time.time()\n        lwt_published = []\n\n        for cid, session in list(self._clients.items()):\n            if not session[\"online\"]:\n                continue\n\n            timeout_limit = session[\"keep_alive\"] * 1.5\n            if (now - session[\"last_seen\"]) > timeout_limit:\n                session[\"online\"] = False\n                will = session.get(\"will\")\n                if will and will.get(\"topic\"):\n                    # Publish Last Will & Testament alert\n                    lwt_packet = self.publish(\n                        topic=will[\"topic\"],\n                        payload=will[\"payload\"],\n                        qos=will[\"qos\"],\n                        retain=will[\"retain\"],\n                        client_id=f\"LWT-{cid}\",\n                    )\n                    lwt_published.append({\n                        \"client_id\": cid,\n                        \"reason\": \"KEEP_ALIVE_TIMEOUT\",\n                        \"lwt_packet\": lwt_packet,\n                    })\n\n        return lwt_published\n\n    def disconnect(self, client_id: str, graceful: bool = True) -> bool:\n        \"\"\"\n        Handles client disconnect. If ungraceful, publishes LWT message immediately.\n        \"\"\"\n        if client_id not in self._clients:\n            return False\n\n        session = self._clients[client_id]\n        session[\"online\"] = False\n\n        if not graceful:\n            will = session.get(\"will\")\n            if will and will.get(\"topic\"):\n                self.publish(\n                    topic=will[\"topic\"],\n                    payload=will[\"payload\"],\n                    qos=will[\"qos\"],\n                    retain=will[\"retain\"],\n                    client_id=f\"LWT-{client_id}\",\n                )\n\n        return True\n"
+      },
+      "readme": {
+        "filename": "README.md",
+        "path": "README.md",
+        "language": "markdown",
+        "title": "Project Architecture & Mathematical Documentation (Markdown)",
+        "code": "# SmartGrid: AI-Driven Industrial IoT & Environmental Automation Control System\n\n**Developer:** Mohamed Seddik Feki <fekiseddik@gmail.com>  \n**Academic Degree:** Bachelor of Robotics and Automation Engineering (Honours), Xiamen University Malaysia (XMUM) (2025–2029)  \n**Repository Path:** `projects/smartgrid-iot`  \n**License:** MIT  \n\n---\n\n## 1. System Overview & Engineering Scope\n\nThe **SmartGrid IoT** platform is an industrial environmental automation and distributed energy management system. It bridges low-level embedded hardware control with high-level edge intelligence:\n\n1. **ESP32 Edge Microcontroller Node Firmware (`firmware/esp32_smartgrid_node.cpp`)**:\n   - Executes real-time discrete PID control with anti-windup clamping and low-pass filtered derivative action to hold chamber temperatures strictly within $\\pm 1.5\\%$ of setpoint.\n   - Combines redundant analog sensors via 1D recursive Kalman filtering and variance-weighted sensor fusion ($w_1 = \\sigma_2^2 / (\\sigma_1^2 + \\sigma_2^2)$).\n   - Manages an ultra-low-power deep-sleep schedule with non-volatile RTC memory state retention, achieving 400+ days autonomy on a 3000 mAh Li-ion battery.\n   - Operates a dedicated hardware fail-safe relay and PWM cutoff interlock logic.\n\n2. **Python Edge Anomaly Inference & MQTT Broker Engine (`src/`)**:\n   - `edge_anomaly_detector.py`: Analytical discrete PID controller ($\\pm 1.5\\%$ tolerance), multi-tier statistical anomaly inference (sliding-window Z-score, EWMA trend smoothing, and CUSUM calibration drift detection), and analytical battery autonomy estimator.\n   - `mqtt_telemetry_broker.py`: Full hierarchical MQTT topic router supporting `+` (single-level) and `#` (multi-level) wildcards, QoS 0/1/2 packet validation, retained message store, and Last Will & Testament (LWT) automated offline alerts.\n\n3. **Interactive SCADA Simulator & Dashboard (`demo/index.html`)**:\n   - 60 FPS real-time oscilloscope canvas plotting Setpoint line, Process Variable (PV) line, PWM Control Effort % line, and dynamic $\\pm 1.5\\%$ tolerance band.\n   - Disturbance & anomaly injection station triggering simulated Python fail-safe cutoff and hardware relay trip.\n   - 4-Zone ESP32 MQTT Node Grid & live telemetry inspector streaming `smartgrid/zone/+/telemetry`.\n   - Interactive 6-month battery autonomy calculator.\n\n---\n\n## 2. Hardware Architecture & Bill of Materials (BOM)\n\n| Component | Part / IC | Interface | Function |\n| :--- | :--- | :--- | :--- |\n| **Microcontroller** | ESP32-WROOM-32D (240 MHz Xtensa LX6) | Dual Core, 520 KB SRAM | Core control loop, Kalman filter, deep-sleep management |\n| **Primary Temp Sensor** | Analog TMP36 / Calibrated NTC Thermistor | ADC1 Channel 6 (GPIO 34) | Primary zone temperature observation ($\\sigma_1 = 0.20^\\circ\\text{C}$) |\n| **Redundant Temp Sensor** | Secondary Analog Sensor | ADC1 Channel 7 (GPIO 35) | Redundant observation for variance-weighted fusion ($\\sigma_2 = 0.35^\\circ\\text{C}$) |\n| **Digital Environment** | Sensirion SHT31-D / BME280 | I2C (GPIO 21 SDA, 22 SCL) | Secondary digital temperature & relative humidity reference |\n| **Heater Actuator** | IRLZ44N Logic-Level N-Channel MOSFET | LEDC Ch 0 PWM (GPIO 18) | 5 kHz hardware PWM drive controlling thermal load |\n| **Safety Interlock** | 24V SPDT Industrial Relay Module | Digital Output (GPIO 27) | Active-HIGH mechanical relay cutting load bus upon fault |\n| **Diagnostic Indicator** | Low-Current Surface Mount LED | Digital Output (GPIO 2) | Status beacon: Normal (OFF/Pulse), Alarm Trip (Blinking Red) |\n| **Battery Power Cell** | 18650 Li-ion Rechargeable Cell (3000 mAh) | Analog Divider (GPIO 36) | 3.7V nominal power supply delivering 400+ days runtime |\n| **LDO Voltage Regulator** | Microchip MCP1700-3302E/TO ($1.6\\ \\mu\\text{A}\\ I_q$) | Power Rail | Ultra-low-quiescent 3.3V linear regulation |\n\n---\n\n## 3. Mathematical Foundations & Control Algorithms\n\n### 3.1 Variance-Weighted Multi-Sensor Kalman Fusion\nTwo redundant sensors observe true environmental temperature $T$:\n$$z_1 \\sim \\mathcal{N}(T, \\sigma_1^2), \\quad z_2 \\sim \\mathcal{N}(T, \\sigma_2^2)$$\nWith $\\sigma_1^2 = 0.0400^\\circ\\text{C}^2$ and $\\sigma_2^2 = 0.1225^\\circ\\text{C}^2$.\n\nThe variance-weighted combined observation is:\n$$w_1 = \\frac{\\sigma_2^2}{\\sigma_1^2 + \\sigma_2^2} \\approx 0.7538, \\quad w_2 = \\frac{\\sigma_1^2}{\\sigma_1^2 + \\sigma_2^2} \\approx 0.2462$$\n$$z_{\\text{fused}} = w_1 z_1 + w_2 z_2$$\n$$\\sigma_{\\text{fused}}^2 = \\frac{\\sigma_1^2 \\sigma_2^2}{\\sigma_1^2 + \\sigma_2^2} \\approx 0.03015^\\circ\\text{C}^2 \\implies \\sigma_{\\text{fused}} \\approx 0.1736^\\circ\\text{C}$$\n\nIn the recursive Kalman filter step:\n$$\\hat{x}_{k|k-1} = \\hat{x}_{k-1|k-1}, \\quad P_{k|k-1} = P_{k-1|k-1} + Q$$\n$$K_k = \\frac{P_{k|k-1}}{P_{k|k-1} + \\sigma_{\\text{fused}}^2}$$\n$$\\hat{x}_{k|k} = \\hat{x}_{k|k-1} + K_k \\left(z_{\\text{fused}} - \\hat{x}_{k|k-1}\\right)$$\n$$P_{k|k} = (1 - K_k) P_{k|k-1}$$\n\n### 3.2 Discrete PID Control with Anti-Windup Clamping\nTo hold process temperature within $\\pm 1.5\\%$ of setpoint:\n$$e_k = r_k - \\hat{x}_{k|k}$$\n- **Proportional:** $P_k = K_p \\cdot e_k$\n- **Integral with Anti-Windup:**\n  $$I_{\\text{candidate}} = I_{k-1} + e_k \\cdot \\Delta t$$\n  $$I_k = \\operatorname{clamp}(I_{\\text{candidate}}, -I_{\\max}, I_{\\max}), \\quad I_{\\max} = 40.0\\%$$\n- **Low-Pass Filtered Derivative:**\n  $$\\alpha_d = 0.70$$\n  $$D_k = \\alpha_d D_{k-1} + (1 - \\alpha_d) \\left(\\frac{e_k - e_{k-1}}{\\Delta t}\\right)$$\n- **Clamped Actuator Effort:**\n  $$u_k = \\operatorname{clamp}(P_k + K_i I_k + K_d D_k, 0.0, 100.0)\\%$$\n\n### 3.3 Ultra-Low-Power Battery Autonomy Model\nFor a $3000\\text{ mAh}$ Li-ion battery (derated to $90\\%$ usable capacity = $2700\\text{ mAh}$):\n- Active current: $I_{\\text{active}} = 80.0\\text{ mA}$ for $T_{\\text{active}} = 0.20\\text{ s}$\n- Sleep current: $I_{\\text{sleep}} = 15.0\\ \\mu\\text{A} = 0.015\\text{ mA}$ for $T_{\\text{sleep}} = 60.0\\text{ s}$\n- Total cycle period: $T_{\\text{cycle}} = 60.20\\text{ s}$\n\nAverage current consumption:\n$$I_{\\text{avg}} = \\frac{(80.0 \\times 0.20) + (0.015 \\times 60.0)}{60.20} = \\frac{16.0 + 0.90}{60.20} \\approx 0.2807\\text{ mA}$$\nDaily consumption:\n$$C_{\\text{daily}} = 0.2807\\text{ mA} \\times 24\\text{ h} \\approx 6.737\\text{ mAh/day}$$\nTotal autonomy:\n$$\\text{Days} = \\frac{2700\\text{ mAh}}{6.737\\text{ mAh/day}} \\approx 400.7\\text{ days} \\approx 13.16\\text{ months}$$\nSatisfies and exceeds the $6+\\text{ months}$ ($185+\\text{ days}$) mandate.\n\n### 3.4 Multi-Tier Edge Anomaly Detection\n1. **Sliding-Window Z-Score ($W=30$):**\n   $$Z_t = \\frac{|x_t - \\mu_W|}{\\sigma_W}$$\n   Flagged if $Z_t > 3.0$; trips fail-safe if $Z_t \\ge 5.0$.\n2. **EWMA Smoothing ($\\lambda = 0.20$):**\n   $$S_t = \\lambda x_t + (1 - \\lambda) S_{t-1}$$\n3. **CUSUM Calibration Drift Detection:**\n   $$S_t^+ = \\max(0, S_{t-1}^+ + (x_t - \\mu_0 - k))$$\n   $$S_t^- = \\max(0, S_{t-1}^- - (x_t - \\mu_0 + k))$$\n   Where $k = 0.5 \\sigma_0$ and alarm threshold $h = 4.5 \\sigma_0$.\n\n---\n\n## 4. Source Code Structure\n\n```\nprojects/smartgrid-iot/\n├── firmware/\n│   └── esp32_smartgrid_node.cpp      # ESP32 C++ closed-loop PID, Kalman fusion & deep-sleep\n├── src/\n│   ├── edge_anomaly_detector.py      # PID, Z-Score, EWMA, CUSUM & Battery Life Estimator\n│   ├── mqtt_telemetry_broker.py      # MqttTopicRouter (+/# wildcards), SmartGridMqttBridge\n│   └── requirements.txt              # Python requirements\n├── demo/\n│   └── index.html                    # 60 FPS SCADA simulator, canvas oscilloscope & telemetry\n├── requirements.txt                  # Root project requirements\n└── README.md                         # Architectural documentation\n```\n\n---\n\n## 5. Verification & Testing\n\nTo execute automated validation across all 5 test suites:\n```bash\n# Verify new SmartGrid test suite\nnode --test test/smartgrid-project.test.js\n\n# Verify E2E regression suite (120 tests)\nnode test/run-e2e.js\n\n# Verify all project suites together\nnode --test test/omnitrack-project.test.js test/nexus-pulse-project.test.js test/robovision-project.test.js test/smartgrid-project.test.js\n```\n"
+      }
+    };
+  </script>
+
+  <!-- Interactive Simulator & Physics Engine Script -->
+  <script>
+    // ========================================================================
+    // 1. Simulation State & PID Tuning Defaults
+    // ========================================================================
+    let setpoint = 24.0;
+    const pidGains = {
+      kp: 6.5,
+      ki: 1.2,
+      kd: 2.8,
+      maxIntegral: 40.0,
+      alphaD: 0.70
+    };
+
+    const processState = {
+      pv: 24.0,
+      integral: 0.0,
+      prevError: 0.0,
+      filteredDerivative: 0.0,
+      pwmEffort: 48.5,
+      pwmDuty: 124,
+      ambientTemp: 20.0,
+      thermalLagTau: 8.0,
+      actuatorGain: 0.85,
+      disturbance: 0.0
+    };
+
+    let interlockArmed = true;
+    let anomalyActive = false;
+    let selectedZoneId = 1;
+    let mqttStreamPaused = false;
+
+    // Rolling History Buffer for 60 FPS Oscilloscope Canvas (240 samples ~ 4 seconds)
+    const HISTORY_LENGTH = 240;
+    const oscilloscopeHistory = [];
+    for (let i = 0; i < HISTORY_LENGTH; i++) {
+      oscilloscopeHistory.push({
+        sp: setpoint,
+        pv: setpoint,
+        pwm: 48.5,
+        lowerBand: setpoint * 0.985,
+        upperBand: setpoint * 1.015
+      });
+    }
+
+    // ========================================================================
+    // 2. Closed-Loop Discrete PID Step & Physics Simulation
+    // ========================================================================
+    function simulationTick(dt = 0.0167) {
+      // 1. Thermal disturbance exponential decay
+      if (Math.abs(processState.disturbance) > 0.01) {
+        processState.disturbance *= 0.985;
+      } else {
+        processState.disturbance = 0.0;
+      }
+
+      // 2. Check Interlock Cutoff
+      if (!interlockArmed) {
+        processState.pwmEffort = 0.0;
+        processState.pwmDuty = 0;
+      } else {
+        // Discrete PID Algorithm
+        const error = setpoint - processState.pv;
+
+        // Proportional
+        const pTerm = pidGains.kp * error;
+
+        // Integral with Anti-Windup Clamping
+        processState.integral += error * dt;
+        if (processState.integral > pidGains.maxIntegral) {
+          processState.integral = pidGains.maxIntegral;
+        } else if (processState.integral < -pidGains.maxIntegral) {
+          processState.integral = -pidGains.maxIntegral;
+        }
+        const iTerm = pidGains.ki * processState.integral;
+
+        // Low-Pass Filtered Derivative
+        const rawDeriv = (error - processState.prevError) / dt;
+        processState.filteredDerivative = (pidGains.alphaD * processState.filteredDerivative) + ((1.0 - pidGains.alphaD) * rawDeriv);
+        processState.prevError = error;
+        const dTerm = pidGains.kd * processState.filteredDerivative;
+
+        // Total Effort Clamping (0% to 100%)
+        const totalEffort = pTerm + iTerm + dTerm;
+        processState.pwmEffort = Math.max(0.0, Math.min(100.0, totalEffort));
+        processState.pwmDuty = Math.round((processState.pwmEffort / 100.0) * 255);
+      }
+
+      // 3. Chamber Thermal Dynamics
+      // dT/dt = -1/tau * (T - T_ambient) + K_actuator * (PWM / 100) + disturbance
+      const ambientLoss = -(1.0 / processState.thermalLagTau) * (processState.pv - processState.ambientTemp);
+      const heatInput = processState.actuatorGain * (processState.pwmEffort / 100.0) * 4.5;
+      const noise = (Math.random() - 0.5) * 0.04;
+
+      const deltaTemp = (ambientLoss + heatInput + processState.disturbance) * dt + noise;
+      processState.pv += deltaTemp;
+
+      // In anomaly mode, add synthetic high sensor drift
+      if (anomalyActive) {
+        processState.pv += (Math.random() - 0.3) * 0.25;
+      }
+
+      // 4. Record history buffer
+      const lowerBand = setpoint * (1.0 - 0.015);
+      const upperBand = setpoint * (1.0 + 0.015);
+
+      oscilloscopeHistory.push({
+        sp: setpoint,
+        pv: processState.pv,
+        pwm: processState.pwmEffort,
+        lowerBand: lowerBand,
+        upperBand: upperBand
+      });
+
+      if (oscilloscopeHistory.length > HISTORY_LENGTH) {
+        oscilloscopeHistory.shift();
+      }
+    }
+
+    // ========================================================================
+    // 3. 60 FPS Oscilloscope Canvas Renderer
+    // ========================================================================
+    const canvas = document.getElementById('pidOscilloscopeCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function renderOscilloscope() {
+      const width = canvas.width;
+      const height = canvas.height;
+
+      // Clear dark background
+      ctx.fillStyle = '#050b18';
+      ctx.fillRect(0, 0, width, height);
+
+      // Temperature bounds on Left Y-Axis: 15.0°C to 35.0°C (range: 20°C)
+      const minTemp = 15.0;
+      const maxTemp = 35.0;
+      const tempRange = maxTemp - minTemp;
+
+      function tempToY(t) {
+        const clamped = Math.max(minTemp, Math.min(maxTemp, t));
+        return height - ((clamped - minTemp) / tempRange) * (height - 40) - 20;
+      }
+
+      function pwmToY(pwm) {
+        return height - (pwm / 100.0) * (height - 40) - 20;
+      }
+
+      // 1. Draw subtle grid lines
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      ctx.font = '10px ui-monospace, monospace';
+      ctx.fillStyle = '#64748b';
+
+      for (let t = 16.0; t <= 34.0; t += 3.0) {
+        const y = tempToY(t);
+        ctx.beginPath();
+        ctx.moveTo(40, y);
+        ctx.lineTo(width - 45, y);
+        ctx.stroke();
+        ctx.fillText(t.toFixed(1) + '°C', 6, y + 3);
+      }
+
+      // Right axis labels for PWM effort %
+      for (let p = 0; p <= 100; p += 25) {
+        const y = pwmToY(p);
+        ctx.fillStyle = '#d97706';
+        ctx.fillText(p + '%', width - 38, y + 3);
+      }
+
+      const stepX = (width - 85) / (HISTORY_LENGTH - 1);
+
+      // 2. Draw Dynamic +/- 1.5% Tolerance Band (Shaded Fill + Dotted Boundaries)
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.12)';
+      ctx.beginPath();
+      for (let i = 0; i < oscilloscopeHistory.length; i++) {
+        const x = 40 + i * stepX;
+        const yUpper = tempToY(oscilloscopeHistory[i].upperBand);
+        if (i === 0) ctx.moveTo(x, yUpper);
+        else ctx.lineTo(x, yUpper);
+      }
+      for (let i = oscilloscopeHistory.length - 1; i >= 0; i--) {
+        const x = 40 + i * stepX;
+        const yLower = tempToY(oscilloscopeHistory[i].lowerBand);
+        ctx.lineTo(x, yLower);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      // Dotted Upper & Lower boundary lines
+      ctx.strokeStyle = 'rgba(52, 211, 153, 0.45)';
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      for (let i = 0; i < oscilloscopeHistory.length; i++) {
+        const x = 40 + i * stepX;
+        const y = tempToY(oscilloscopeHistory[i].upperBand);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      ctx.beginPath();
+      for (let i = 0; i < oscilloscopeHistory.length; i++) {
+        const x = 40 + i * stepX;
+        const y = tempToY(oscilloscopeHistory[i].lowerBand);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 3. Draw PWM Control Effort Line (Amber)
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let i = 0; i < oscilloscopeHistory.length; i++) {
+        const x = 40 + i * stepX;
+        const y = pwmToY(oscilloscopeHistory[i].pwm);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // 4. Draw Target Setpoint Line (Sky Blue, Dashed)
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      for (let i = 0; i < oscilloscopeHistory.length; i++) {
+        const x = 40 + i * stepX;
+        const y = tempToY(oscilloscopeHistory[i].sp);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 5. Draw Process Variable (PV) Line (High Glow Emerald / Crimson if tripped)
+      const isTripped = !interlockArmed;
+      const isOutOfTolerance = Math.abs(processState.pv - setpoint) / setpoint > 0.015;
+
+      ctx.strokeStyle = isTripped ? '#ef4444' : (isOutOfTolerance ? '#f59e0b' : '#10b981');
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (let i = 0; i < oscilloscopeHistory.length; i++) {
+        const x = 40 + i * stepX;
+        const y = tempToY(oscilloscopeHistory[i].pv);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Current Point Pulsing Head
+      const lastX = 40 + (oscilloscopeHistory.length - 1) * stepX;
+      const lastY = tempToY(processState.pv);
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.beginPath();
+      ctx.arc(lastX, lastY, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Top Legend HUD
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(40, 6, width - 85, 20);
+      ctx.strokeStyle = '#334155';
+      ctx.strokeRect(40, 6, width - 85, 20);
+
+      ctx.font = '11px ui-monospace, monospace';
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText('SP: ' + setpoint.toFixed(2) + '°C', 50, 20);
+
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.fillText('PV: ' + processState.pv.toFixed(2) + '°C', 150, 20);
+
+      const err = processState.pv - setpoint;
+      const errPct = (err / setpoint) * 100.0;
+      ctx.fillStyle = Math.abs(errPct) <= 1.5 ? '#10b981' : '#f59e0b';
+      ctx.fillText('Δ: ' + (err >= 0 ? '+' : '') + err.toFixed(2) + '°C (' + (errPct >= 0 ? '+' : '') + errPct.toFixed(2) + '%)', 260, 20);
+
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillText('PWM Effort: ' + processState.pwmEffort.toFixed(1) + '%', 420, 20);
+
+      const bandText = 'Band: [' + (setpoint * 0.985).toFixed(2) + ' - ' + (setpoint * 1.015).toFixed(2) + '°C]';
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText(bandText, width - 260, 20);
+    }
+
+    // ========================================================================
+    // 4. Interactive Sliders & Injection Handlers
+    // ========================================================================
+    function updateSetpoint(val) {
+      setpoint = parseFloat(val);
+      document.getElementById('valSetpoint').textContent = setpoint.toFixed(1) + ' °C';
+      document.getElementById('kpiSetpoint').textContent = setpoint.toFixed(2) + ' °C';
+    }
+
+    function updateKp(val) {
+      pidGains.kp = parseFloat(val);
+      document.getElementById('valKp').textContent = pidGains.kp.toFixed(1);
+    }
+
+    function updateKi(val) {
+      pidGains.ki = parseFloat(val);
+      document.getElementById('valKi').textContent = pidGains.ki.toFixed(2);
+    }
+
+    function updateKd(val) {
+      pidGains.kd = parseFloat(val);
+      document.getElementById('valKd').textContent = pidGains.kd.toFixed(1);
+    }
+
+    function injectThermalDisturbance() {
+      processState.disturbance = 5.0; // Instantaneous +5.0°C load step
+      showToast('⚡ Injected +5.0°C thermal disturbance into zone chamber. Testing PID recovery.');
+    }
+
+    function injectSensorAnomaly() {
+      anomalyActive = true;
+      interlockArmed = false; // Tripped fail-safe cutoff
+      processState.pwmEffort = 0.0;
+      processState.pwmDuty = 0;
+
+      // Update UI Banner and Badges
+      const banner = document.getElementById('anomalyBanner');
+      banner.className = 'status-banner tripped';
+      document.getElementById('anomalyStatusIcon').textContent = '🚨';
+      document.getElementById('anomalyStatusText').textContent = 'FAIL-SAFE CUTOFF TRIPPED: Python Edge Anomaly Detector flagged sensor drift / Z-score outlier. Relay OPEN, PWM = 0.0%.';
+
+      const badge = document.getElementById('badgeInterlock');
+      badge.className = 'status-badge alarm';
+      badge.textContent = '🚨 INTERLOCK: TRIPPED (CUTOFF)';
+
+      document.getElementById('kpiInterlock').textContent = 'TRIPPED (Cutoff)';
+      document.getElementById('kpiInterlock').className = 'kpi-val text-danger';
+
+      showToast('⚠️ Sensor anomaly triggered. Fail-safe actuator cutoff engaged.');
+    }
+
+    function resetFailSafeInterlock() {
+      anomalyActive = false;
+      interlockArmed = true;
+      processState.integral = 0.0; // Reset integral to prevent restart windup
+      processState.prevError = 0.0;
+      processState.filteredDerivative = 0.0;
+      processState.disturbance = 0.0;
+
+      const banner = document.getElementById('anomalyBanner');
+      banner.className = 'status-banner normal';
+      document.getElementById('anomalyStatusIcon').textContent = '🛡️';
+      document.getElementById('anomalyStatusText').textContent = 'System Normal: Closed-loop PID holding chamber within ±1.5% tolerance band. Hardware relay energized.';
+
+      const badge = document.getElementById('badgeInterlock');
+      badge.className = 'status-badge active';
+      badge.textContent = '🛡️ INTERLOCK: ARMED';
+
+      document.getElementById('kpiInterlock').textContent = 'ARMED (Closed)';
+      document.getElementById('kpiInterlock').className = 'kpi-val text-accent';
+
+      showToast('🔄 Fail-Safe Interlock reset. Control loop restored.');
+    }
+
+    // ========================================================================
+    // 5. 4-Zone ESP32 MQTT Node Fleet & Live Telemetry Inspector
+    // ========================================================================
+    function selectZone(id) {
+      selectedZoneId = id;
+      document.querySelectorAll('.zone-card').forEach(c => {
+        c.classList.toggle('selected', parseInt(c.getAttribute('data-zone')) === id);
+      });
+
+      if (id === 1) setpoint = 24.0;
+      else if (id === 2) setpoint = 27.8;
+      else if (id === 3) setpoint = 38.0;
+      else if (id === 4) setpoint = 23.5;
+
+      document.getElementById('sliderSetpoint').value = setpoint;
+      updateSetpoint(setpoint);
+      showToast('Focused Zone ' + id + ' telemetry on oscilloscope.');
+    }
+
+    const mqttTerminal = document.getElementById('mqttStreamTerminal');
+    let mqttPacketSeq = 1000;
+
+    function pushMqttTelemetryPacket() {
+      if (mqttStreamPaused) return;
+
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
+      mqttPacketSeq++;
+
+      const zoneId = (mqttPacketSeq % 4) + 1;
+      const topic = 'smartgrid/zone/' + zoneId + '/telemetry';
+      const qos = 1;
+
+      const tempVal = (zoneId === 1) ? processState.pv : (20.0 + zoneId * 4.2 + (Math.random() - 0.5) * 0.4);
+      const isWithinTol = Math.abs(tempVal - setpoint) / setpoint <= 0.015;
+
+      const payload = {
+        boot: 42,
+        zone: zoneId,
+        pv: parseFloat(tempVal.toFixed(2)),
+        sp: parseFloat(setpoint.toFixed(2)),
+        pwm_pct: parseFloat(processState.pwmEffort.toFixed(1)),
+        tol_ok: isWithinTol,
+        interlock: interlockArmed ? "ARMED" : "TRIPPED",
+        v_bat: parseFloat((3.90 + (zoneId * 0.05)).toFixed(2))
+      };
+
+      const row = document.createElement('div');
+      row.className = 'mqtt-msg-row';
+      row.innerHTML = '<span class="mqtt-time">[' + timeStr + ']</span>' +
+        '<span class="mqtt-topic">' + topic + '</span>' +
+        '<span class="mqtt-qos">QoS ' + qos + '</span>' +
+        '<span class="mqtt-payload">' + JSON.stringify(payload) + '</span>';
+
+      mqttTerminal.appendChild(row);
+      if (mqttTerminal.children.length > 40) {
+        mqttTerminal.removeChild(mqttTerminal.children[0]);
+      }
+      mqttTerminal.scrollTop = mqttTerminal.scrollHeight;
+
+      // Update zone card preview
+      if (document.getElementById('z1Temp')) document.getElementById('z1Temp').textContent = processState.pv.toFixed(1) + '°C';
+      if (document.getElementById('z1Pwm')) document.getElementById('z1Pwm').textContent = processState.pwmEffort.toFixed(1) + '%';
+    }
+
+    function toggleMqttStream() {
+      mqttStreamPaused = !mqttStreamPaused;
+      document.getElementById('btnToggleMqttStream').textContent = mqttStreamPaused ? '▶️ Resume' : '⏸️ Pause';
+      showToast(mqttStreamPaused ? 'MQTT stream paused.' : 'MQTT stream resumed.');
+    }
+
+    function clearMqttStream() {
+      mqttTerminal.innerHTML = '';
+      showToast('MQTT stream log cleared.');
+    }
+
+    // ========================================================================
+    // 6. Interactive 6-Month Deep-Sleep Battery Autonomy Calculator
+    // ========================================================================
+    function calculateBatteryAutonomy() {
+      const tWakeMs = parseFloat(document.getElementById('calcWakeDuration').value);
+      const tSleepS = parseFloat(document.getElementById('calcSleepInterval').value);
+      const iActiveMa = parseFloat(document.getElementById('calcActiveCurrent').value);
+      const iSleepUa = parseFloat(document.getElementById('calcSleepCurrent').value);
+      const cBatMah = parseFloat(document.getElementById('calcBatteryCap').value);
+
+      document.getElementById('lblWakeDuration').textContent = tWakeMs + ' ms';
+      document.getElementById('lblSleepInterval').textContent = tSleepS + ' s';
+      document.getElementById('lblActiveCurrent').textContent = iActiveMa + ' mA';
+      document.getElementById('lblSleepCurrent').textContent = iSleepUa + ' µA';
+      document.getElementById('lblBatteryCap').textContent = cBatMah + ' mAh';
+
+      // Formulas:
+      // T_cycle = (Twake / 1000) + Tsleep (seconds)
+      const tWakeSec = tWakeMs / 1000.0;
+      const tCycleSec = tWakeSec + tSleepS;
+
+      // Q_active = Iactive * Twake, Q_sleep = Isleep * Tsleep
+      const qActive = iActiveMa * tWakeSec;
+      const qSleep = (iSleepUa / 1000.0) * tSleepS;
+      const iAvgMa = (qActive + qSleep) / tCycleSec;
+
+      // 90% usable depth-of-discharge derating
+      const usableMah = cBatMah * 0.90;
+      const dailyMah = iAvgMa * 24.0;
+      const days = usableMah / dailyMah;
+      const months = days / 30.4375;
+
+      document.getElementById('calcAvgCurrent').textContent = iAvgMa.toFixed(3) + ' mA';
+      document.getElementById('calcDailyMah').textContent = dailyMah.toFixed(2) + ' mAh/day';
+      document.getElementById('calcDays').textContent = Math.round(days) + ' Days';
+      document.getElementById('calcMonths').textContent = months.toFixed(1) + ' Months';
+      document.getElementById('kpiAutonomy').textContent = Math.round(days) + ' Days (' + months.toFixed(1) + ' Mo)';
+
+      const badge = document.getElementById('calcTargetBadge');
+      if (days >= 185.0) {
+        badge.className = 'calc-badge';
+        badge.textContent = '✅ EXCEEDS 6-MONTH CRITERIA (>= 185 DAYS)';
+      } else {
+        badge.className = 'calc-badge';
+        badge.style.background = 'rgba(239, 68, 68, 0.2)';
+        badge.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+        badge.style.color = 'var(--danger-light)';
+        badge.textContent = '⚠️ BELOW 6-MONTH TARGET (< 185 DAYS)';
+      }
+    }
+
+    // ========================================================================
+    // 7. Tabbed Full-Fidelity Source Code Explorer & Clipboard
+    // ========================================================================
+    let currentSourceKey = 'firmware';
+
+    function switchSourceFile(key) {
+      if (!SOURCE_FILES[key]) return;
+      currentSourceKey = key;
+
+      document.querySelectorAll('.file-tab').forEach(btn => {
+        const isTarget = btn.getAttribute('data-file') === key;
+        btn.classList.toggle('active', isTarget);
+        btn.setAttribute('aria-selected', isTarget);
+      });
+
+      document.getElementById('sourceCodeContainer').textContent = SOURCE_FILES[key].code;
+    }
+
+    function copyCurrentSourceCode() {
+      const fileObj = SOURCE_FILES[currentSourceKey];
+      const code = fileObj.code;
+      const filename = fileObj.filename;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => {
+          showToast('Source code of "' + filename + '" copied to clipboard.');
+        }).catch(() => {
+          fallbackCopyText(code, filename);
+        });
+      } else {
+        fallbackCopyText(code, filename);
+      }
+    }
+
+    function fallbackCopyText(text, filename) {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Source code of "' + filename + '" copied to clipboard.');
+      } catch (err) {
+        showToast('Clipboard access unavailable in current browser context.');
+      }
+      document.body.removeChild(textArea);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastBox');
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      if (toast._timer) clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3500);
+    }
+
+    // ========================================================================
+    // 8. Global Window Exports & Headless Verification Interface
+    // ========================================================================
+    window.setpoint = setpoint;
+    window.pidGains = pidGains;
+    window.processState = processState;
+    window.injectThermalDisturbance = injectThermalDisturbance;
+    window.injectSensorAnomaly = injectSensorAnomaly;
+    window.resetFailSafeInterlock = resetFailSafeInterlock;
+    window.calculateBatteryAutonomy = calculateBatteryAutonomy;
+    window.switchSourceFile = switchSourceFile;
+    window.copyCurrentSourceCode = copyCurrentSourceCode;
+    window.selectZone = selectZone;
+    window.toggleMqttStream = toggleMqttStream;
+    window.clearMqttStream = clearMqttStream;
+    window.updateSetpoint = updateSetpoint;
+    window.updateKp = updateKp;
+    window.updateKi = updateKi;
+    window.updateKd = updateKd;
+    window.getOscilloscopeHistory = () => oscilloscopeHistory;
+    window.getInterlockState = () => interlockArmed;
+    window.getAnomalyState = () => anomalyActive;
+    window.SOURCE_FILES = SOURCE_FILES;
+
+    // ========================================================================
+    // 9. Main Animation Loop & Periodic Telemetry
+    // ========================================================================
+    function animationTick() {
+      simulationTick();
+      renderOscilloscope();
+
+      // Update KPI text values
+      document.getElementById('kpiPv').textContent = processState.pv.toFixed(2) + ' °C';
+      const err = processState.pv - setpoint;
+      const errPct = (err / setpoint) * 100.0;
+      document.getElementById('kpiError').textContent = (err >= 0 ? '+' : '') + err.toFixed(2) + ' °C (' + (errPct >= 0 ? '+' : '') + errPct.toFixed(2) + '%)';
+      document.getElementById('kpiPwm').textContent = processState.pwmEffort.toFixed(1) + ' %';
+
+      requestAnimationFrame(animationTick);
+    }
+
+    // Initialize initial views
+    switchSourceFile('firmware');
+    calculateBatteryAutonomy();
+    setInterval(pushMqttTelemetryPacket, 1000);
+    requestAnimationFrame(animationTick);
+  </script>
+</body>
+</html>

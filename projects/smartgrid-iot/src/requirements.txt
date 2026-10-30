@@ -1,0 +1,6 @@
+# SmartGrid IoT: Industrial Control & Edge Telemetry Dependencies
+# Mohamed Seddik Feki <fekiseddik@gmail.com>
+paho-mqtt>=1.6.1
+numpy>=1.24.0
+scipy>=1.10.0
+pytest>=7.4.0

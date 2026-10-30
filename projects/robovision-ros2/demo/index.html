@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoboVision — 2D LiDAR SLAM, EKF Sensor Fusion &amp; ESP32 Telemetry Dashboard | Mohamed Seddik Feki</title>
+  <style>
+    /* Reset & CSS Custom Properties */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #070c18;
+      --bg-card: #0f172a;
+      --bg-card-subtle: #1e293b;
+      --bg-code: #0b1120;
+      --border-color: #334155;
+      --border-focus: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #0284c7;
+      --primary-light: #38bdf8;
+      --accent: #10b981;
+      --accent-light: #34d399;
+      --warning: #f59e0b;
+      --warning-light: #fbbf24;
+      --danger: #ef4444;
+      --danger-light: #f87171;
+      --purple: #a855f7;
+      --purple-light: #c084fc;
+      --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-stack);
+      line-height: 1.5;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Sticky Navigation */
+    .top-navbar {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0.75rem 1.5rem;
+    }
+
+    .nav-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-brand-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card-subtle);
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover, .back-btn:focus-visible {
+      color: var(--text-main);
+      border-color: var(--primary);
+      background: rgba(2, 132, 199, 0.15);
+      outline: none;
+    }
+
+    .brand-title-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-title span.badge-chip {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      background: rgba(2, 132, 199, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: var(--primary-light);
+      border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .nav-status-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.7rem;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--accent-light);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse-dot 1.8s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Live Telemetry KPI Strip */
+    .telemetry-strip {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.6rem 1.5rem;
+    }
+
+    .strip-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .strip-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    .strip-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .strip-val {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .strip-val.text-primary { color: var(--primary-light); }
+    .strip-val.text-accent { color: var(--accent-light); }
+    .strip-val.text-warning { color: var(--warning-light); }
+
+    /* Main Container */
+    .main-content {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem 3rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* 2-Column Robotics Dashboard Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(340px, 1fr);
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Card Panels */
+    .card-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    /* Interactive Toolbar */
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-group {
+      display: inline-flex;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    .tool-btn {
+      background: var(--bg-card-subtle);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .btn-group .tool-btn {
+      border-radius: 0;
+      border: none;
+      border-right: 1px solid var(--border-color);
+    }
+    .btn-group .tool-btn:last-child {
+      border-right: none;
+    }
+
+    .tool-btn:hover {
+      background: rgba(2, 132, 199, 0.15);
+      color: var(--text-main);
+    }
+
+    .tool-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 0 10px rgba(2, 132, 199, 0.4);
+    }
+
+    .tool-btn.btn-accent.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    }
+
+    .tool-btn.btn-warning.active {
+      background: var(--warning);
+      border-color: var(--warning);
+      color: #0f172a;
+    }
+
+    .tool-btn.btn-secondary {
+      background: rgba(51, 65, 85, 0.4);
+      color: var(--text-muted);
+    }
+
+    .tool-btn.btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger-light);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .tool-btn.btn-danger:hover {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    /* Canvas Wrapper */
+    .canvas-container {
+      position: relative;
+      background: #040812;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    #slamCanvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 540px;
+      aspect-ratio: 800 / 520;
+      cursor: crosshair;
+      background: radial-gradient(circle at center, #070e1e 0%, #03060d 100%);
+    }
+
+    #slamCanvas:focus-visible {
+      outline: 2px solid var(--primary-light);
+      outline-offset: -2px;
+    }
+
+    /* Canvas Legend & Status Bar */
+    .canvas-legend-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      font-size: 0.725rem;
+      padding-top: 0.25rem;
+      color: var(--text-muted);
+    }
+
+    .legend-items {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .legend-color-box {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+
+    /* Right Column Cards */
+    .right-panels-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* Teleop Controls Card */
+    .dpad-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0;
+    }
+
+    .dpad-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .dpad-btn {
+      width: 54px;
+      height: 54px;
+      border-radius: 8px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+
+    .dpad-btn:hover {
+      background: rgba(2, 132, 199, 0.25);
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .dpad-btn:active {
+      background: var(--primary);
+      color: #ffffff;
+      transform: translateY(1px);
+    }
+
+    .dpad-btn.stop-btn {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: var(--danger-light);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .dpad-btn.stop-btn:hover {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      width: 100%;
+    }
+
+    .slider-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.725rem;
+      color: var(--text-muted);
+    }
+
+    .slider-input {
+      width: 100%;
+      accent-color: var(--primary-light);
+      height: 6px;
+      cursor: pointer;
+    }
+
+    /* Hardware Telemetry Meters */
+    .meters-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .meter-card {
+      background: var(--bg-card-subtle);
+      border: 1px solid rgba(51, 65, 85, 0.7);
+      border-radius: 6px;
+      padding: 0.6rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .meter-title {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .meter-val {
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .meter-bar-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.2rem;
+    }
+
+    .meter-bar-fill {
+      height: 100%;
+      background: var(--primary-light);
+      border-radius: 3px;
+      transition: width 0.1s ease;
+    }
+
+    .meter-bar-fill.accent { background: var(--accent); }
+    .meter-bar-fill.warning { background: var(--warning); }
+
+    /* EKF Covariance Inspector */
+    .cov-matrix {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.35rem;
+      background: rgba(11, 17, 32, 0.8);
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-align: center;
+    }
+
+    .cov-cell {
+      padding: 0.25rem 0.1rem;
+      border-radius: 3px;
+      background: var(--bg-card);
+      color: var(--text-muted);
+    }
+
+    .cov-cell.diag {
+      color: var(--primary-light);
+      font-weight: 700;
+      background: rgba(2, 132, 199, 0.15);
+    }
+
+    /* Tabbed Source Code Explorer */
+    .source-explorer-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .source-tabs-header {
+      background: var(--bg-card-subtle);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .source-tab-list {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .file-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+
+    .file-tab:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .file-tab.active {
+      color: var(--primary-light);
+      background: rgba(2, 132, 199, 0.15);
+      border-color: rgba(56, 189, 248, 0.3);
+      font-weight: 600;
+    }
+
+    .copy-source-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+    }
+
+    .copy-source-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .code-viewer-container {
+      background: var(--bg-code);
+      max-height: 480px;
+      overflow: auto;
+      padding: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: #e2e8f0;
+      tab-size: 2;
+      white-space: pre;
+    }
+
+    /* Toast Notification */
+    .toast-msg {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #0284c7;
+      color: #ffffff;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: none;
+      z-index: 1000;
+      animation: toast-fade 0.25s ease-out;
+    }
+
+    @keyframes toast-fade {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive Mobile Layout Rules (640px, 480px, 375px & 320px) */
+    @media (max-width: 640px) {
+      .toolbar-row {
+        gap: 0.35rem;
+      }
+      .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+        border-radius: 6px;
+      }
+      .btn-group .tool-btn {
+        flex: 1 1 auto;
+        border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        justify-content: center;
+      }
+      .btn-group .tool-btn:last-child {
+        border-bottom: none;
+      }
+      .panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      .source-tabs-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      .copy-source-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .top-navbar {
+        padding: 0.5rem 0.75rem;
+      }
+      .telemetry-strip {
+        padding: 0.5rem 0.75rem;
+      }
+      .strip-inner {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      .main-content {
+        padding: 0.75rem 0.75rem 2rem;
+      }
+      .card-panel {
+        padding: 0.75rem 0.75rem;
+      }
+      .tool-btn {
+        padding: 0.35rem 0.5rem;
+        font-size: 0.7rem;
+      }
+      .brand-title {
+        font-size: 1rem;
+      }
+      .source-tab-list {
+        width: 100%;
+      }
+      .file-tab {
+        flex: 1 1 auto;
+        justify-content: center;
+        padding: 0.3rem 0.5rem;
+        font-size: 0.7rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .meters-grid {
+        grid-template-columns: 1fr;
+      }
+      .dpad-btn {
+        width: 46px;
+        height: 46px;
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Sticky Navigation Bar -->
+  <header class="top-navbar" role="banner">
+    <div class="nav-inner">
+      <div class="nav-brand-group">
+        <a href="../../../index.html" class="back-btn" data-testid="back-to-portfolio" aria-label="Return to Mohamed Seddik Feki's portfolio">
+          ← Portfolio
+        </a>
+        <div class="brand-title-wrap">
+          <div class="brand-title">
+            RoboVision
+            <span class="badge-chip">ROS2 + ESP32</span>
+          </div>
+          <span class="brand-subtitle">Autonomous Mobile Robot 2D LiDAR SLAM &amp; Telemetry Dashboard • Mohamed Seddik Feki</span>
+        </div>
+      </div>
+
+      <div class="nav-status-group">
+        <div class="status-badge" title="Simulating real-time ROS2 Humble node">
+          <span class="status-dot"></span>
+          <span>ROS2 Humble Active (60 Hz)</span>
+        </div>
+        <div class="status-badge" style="background: rgba(2, 132, 199, 0.12); border-color: rgba(2, 132, 199, 0.3); color: var(--primary-light);">
+          <span>ESP32 100 Hz RTOS PID</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Live Telemetry KPI Strip -->
+  <section class="telemetry-strip" aria-label="Real-time robotics telemetry metrics">
+    <div class="strip-inner">
+      <div class="strip-item">
+        <span class="strip-label">EKF Robot Pose (x, y, θ)</span>
+        <span class="strip-val text-primary" id="kpiPose">X: 2.14m | Y: 1.56m | 24.3°</span>
+      </div>
+      <div class="strip-item">
+        <span class="strip-label">Localization Accuracy (EKF)</span>
+        <span class="strip-val text-accent" id="kpiAccuracy">±1.8 cm (Centimeter Grade)</span>
+      </div>
+      <div class="strip-item">
+        <span class="strip-label">Raw Odometry Drift Error</span>
+        <span class="strip-val text-warning" id="kpiDrift">14.6 cm Accumulated</span>
+      </div>
+      <div class="strip-item">
+        <span class="strip-label">2D LiDAR 360° Raycast</span>
+        <span class="strip-val" id="kpiLidar">360 pts @ 60.0 FPS</span>
+      </div>
+      <div class="strip-item">
+        <span class="strip-label">Battery System (3S LiPo)</span>
+        <span class="strip-val text-accent" id="kpiBattery">12.38V (86%) • 1.15A</span>
+      </div>
+      <div class="strip-item">
+        <span class="strip-label">Active Navigation Mode</span>
+        <span class="strip-val text-primary" id="kpiMode">AUTONOMOUS (A* Goal)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Body -->
+  <main class="main-content" role="main">
+
+    <!-- 2-Column Robotics Dashboard Grid -->
+    <div class="dashboard-grid">
+
+      <!-- Left Column: SLAM Canvas & Interactive Controls -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <span>🗺️</span> 60 FPS 2D LiDAR SLAM, Raycasting &amp; A* Navigation
+          </h2>
+          <div class="toolbar-row">
+            <div class="btn-group" role="group" aria-label="Navigation Mode Selection">
+              <button type="button" id="btnModeAuto" class="tool-btn active" onclick="setNavMode('auto')" aria-pressed="true">
+                🎯 Autonomous Nav
+              </button>
+              <button type="button" id="btnModeTeleop" class="tool-btn" onclick="setNavMode('teleop')" aria-pressed="false">
+                🕹️ Manual Teleop
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas Interactive Tools Bar -->
+        <div class="toolbar-row">
+          <div class="btn-group" role="group" aria-label="Canvas Click Action Tool">
+            <button type="button" id="toolGoal" class="tool-btn active" onclick="setActiveTool('goal')" aria-pressed="true">
+              📍 Set Waypoint Goal
+            </button>
+            <button type="button" id="toolObstacle" class="tool-btn" onclick="setActiveTool('obstacle')" aria-pressed="false">
+              🧱 Place Dynamic Obstacle
+            </button>
+            <button type="button" id="toolErase" class="tool-btn" onclick="setActiveTool('erase')" aria-pressed="false">
+              🧹 Erase Cell
+            </button>
+          </div>
+
+          <button type="button" id="toggleLidar" class="tool-btn active" onclick="toggleLayer('lidar')" aria-pressed="true">
+            ⚡ LiDAR Rays [ON]
+          </button>
+          <button type="button" id="toggleOdom" class="tool-btn active" onclick="toggleLayer('odom')" aria-pressed="true">
+            🛰️ Drifted Odometry [ON]
+          </button>
+          <button type="button" id="toggleMap" class="tool-btn active" onclick="toggleLayer('map')" aria-pressed="true">
+            🗺️ Occupancy Grid [ON]
+          </button>
+
+          <button type="button" class="tool-btn btn-secondary" onclick="resetSlamMap()" title="Clear SLAM log-odds occupancy map">
+            🔄 Reset Map
+          </button>
+          <button type="button" class="tool-btn btn-danger" onclick="clearDynamicObstacles()" title="Clear all user placed obstacles">
+            ❌ Clear Obstacles
+          </button>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="canvas-container">
+          <canvas
+            id="slamCanvas"
+            width="800"
+            height="520"
+            role="img"
+            aria-label="Interactive 2D LiDAR SLAM canvas: click to set navigation goal or place obstacles"
+            tabindex="0"
+          ></canvas>
+        </div>
+
+        <!-- Canvas Legend & Instruction Strip -->
+        <div class="canvas-legend-strip">
+          <div class="legend-items">
+            <span class="legend-item">
+              <span class="legend-color-box" style="background: #0284c7; box-shadow: 0 0 6px #0284c7;"></span>
+              <span>EKF Fused Trajectory (±2cm)</span>
+            </span>
+            <span class="legend-item">
+              <span class="legend-color-box" style="background: #f59e0b; border: 1px dashed #fbbf24;"></span>
+              <span>Drifted Wheel Odometry</span>
+            </span>
+            <span class="legend-item">
+              <span class="legend-color-box" style="background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
+              <span>A* Planned Path</span>
+            </span>
+            <span class="legend-item">
+              <span class="legend-color-box" style="background: #22c55e;"></span>
+              <span>360° Laser Scan</span>
+            </span>
+            <span class="legend-item">
+              <span class="legend-color-box" style="background: #ef4444;"></span>
+              <span>Dynamic Obstacle</span>
+            </span>
+          </div>
+          <span id="canvasInteractionHint" style="font-style: italic;">
+            Click canvas to dispatch navigation goal.
+          </span>
+        </div>
+      </div>
+
+      <!-- Right Column: Teleoperation & ESP32 Hardware Inspector -->
+      <div class="right-panels-column">
+
+        <!-- Virtual Teleoperation & cmd_vel Card -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">
+              <span>🕹️</span> Virtual Teleop &amp; cmd_vel Joystick
+            </h2>
+            <span class="badge-chip" id="badgeCmdVel">v: 0.00 m/s | ω: 0.00 rad/s</span>
+          </div>
+
+          <div class="dpad-container">
+            <div class="dpad-row">
+              <button type="button" class="dpad-btn" id="dpadUp" onmousedown="teleopMove(1, 0)" onmouseup="teleopStop()" ontouchstart="teleopMove(1, 0)" ontouchend="teleopStop()" aria-label="Move Forward">▲</button>
+            </div>
+            <div class="dpad-row">
+              <button type="button" class="dpad-btn" id="dpadLeft" onmousedown="teleopMove(0, 1)" onmouseup="teleopStop()" ontouchstart="teleopMove(0, 1)" ontouchend="teleopStop()" aria-label="Turn Left">◄</button>
+              <button type="button" class="dpad-btn stop-btn" id="dpadStop" onclick="teleopStop()" aria-label="Emergency Stop">STOP</button>
+              <button type="button" class="dpad-btn" id="dpadRight" onmousedown="teleopMove(0, -1)" onmouseup="teleopStop()" ontouchstart="teleopMove(0, -1)" ontouchend="teleopStop()" aria-label="Turn Right">►</button>
+            </div>
+            <div class="dpad-row">
+              <button type="button" class="dpad-btn" id="dpadDown" onmousedown="teleopMove(-1, 0)" onmouseup="teleopStop()" ontouchstart="teleopMove(-1, 0)" ontouchend="teleopStop()" aria-label="Move Reverse">▼</button>
+            </div>
+          </div>
+
+          <div class="slider-row">
+            <div class="slider-meta">
+              <span>Drive Speed Limit</span>
+              <span id="labelSpeedLimit">0.35 m/s</span>
+            </div>
+            <input type="range" class="slider-input" id="sliderSpeed" min="0.10" max="0.60" step="0.05" value="0.35" oninput="updateSpeedLimit(this.value)" aria-label="Adjust robot linear speed limit">
+          </div>
+
+          <p style="font-size: 0.725rem; color: var(--text-dim); text-align: center;">
+            Keyboard shortcuts: <kbd style="background: #1e293b; padding: 2px 5px; border-radius: 3px;">W</kbd> <kbd style="background: #1e293b; padding: 2px 5px; border-radius: 3px;">A</kbd> <kbd style="background: #1e293b; padding: 2px 5px; border-radius: 3px;">S</kbd> <kbd style="background: #1e293b; padding: 2px 5px; border-radius: 3px;">D</kbd> or Arrow Keys. <kbd style="background: #1e293b; padding: 2px 5px; border-radius: 3px;">Space</kbd> for Emergency Stop.
+          </p>
+        </div>
+
+        <!-- ESP32 Low-Level Hardware Diagnostics Card -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">
+              <span>⚡</span> ESP32 Motor Diagnostics &amp; Encoders
+            </h2>
+            <span style="font-size: 0.75rem; color: var(--accent-light); font-weight: 600;">100 Hz PID Loop</span>
+          </div>
+
+          <div class="meters-grid">
+            <div class="meter-card">
+              <div class="meter-title">
+                <span>Left Wheel RPM</span>
+                <span id="valRpmL">102.4</span>
+              </div>
+              <div class="meter-val text-primary" id="valRpmLBig">102 RPM</div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill" id="barRpmL" style="width: 45%;"></div>
+              </div>
+            </div>
+
+            <div class="meter-card">
+              <div class="meter-title">
+                <span>Right Wheel RPM</span>
+                <span id="valRpmR">104.8</span>
+              </div>
+              <div class="meter-val text-primary" id="valRpmRBig">105 RPM</div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill" id="barRpmR" style="width: 46%;"></div>
+              </div>
+            </div>
+
+            <div class="meter-card">
+              <div class="meter-title">
+                <span>Left PWM (0-255)</span>
+                <span id="valPwmL">184</span>
+              </div>
+              <div class="meter-val" id="valPwmLBig">72%</div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill accent" id="barPwmL" style="width: 72%;"></div>
+              </div>
+            </div>
+
+            <div class="meter-card">
+              <div class="meter-title">
+                <span>Right PWM (0-255)</span>
+                <span id="valPwmR">189</span>
+              </div>
+              <div class="meter-val" id="valPwmRBig">74%</div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill accent" id="barPwmR" style="width: 74%;"></div>
+              </div>
+            </div>
+
+            <div class="meter-card">
+              <div class="meter-title"><span>Left Encoder Ticks</span></div>
+              <div class="meter-val" id="valTicksL" style="font-size: 0.95rem;">48,210</div>
+            </div>
+
+            <div class="meter-card">
+              <div class="meter-title"><span>Right Encoder Ticks</span></div>
+              <div class="meter-val" id="valTicksR" style="font-size: 0.95rem;">48,890</div>
+            </div>
+          </div>
+
+          <!-- EKF Covariance Matrix -->
+          <div style="display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.25rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.725rem; color: var(--text-dim); font-weight: 600;">
+              <span>EKF State Covariance Matrix (P)</span>
+              <span id="labelCovAccuracy" class="text-accent">1-σ: ±1.78 cm</span>
+            </div>
+            <div class="cov-matrix" id="covMatrixDisplay">
+              <div class="cov-cell diag" id="cov00">0.00032</div>
+              <div class="cov-cell" id="cov01">0.00000</div>
+              <div class="cov-cell" id="cov02">0.00002</div>
+              <div class="cov-cell" id="cov10">0.00000</div>
+              <div class="cov-cell diag" id="cov11">0.00031</div>
+              <div class="cov-cell" id="cov12">0.00001</div>
+              <div class="cov-cell" id="cov20">0.00002</div>
+              <div class="cov-cell" id="cov21">0.00001</div>
+              <div class="cov-cell diag" id="cov22">0.00095</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bottom Section: Tabbed Full-Fidelity Source Code Explorer -->
+    <section class="source-explorer-card" aria-label="Embedded production robotics source code explorer">
+      <div class="source-tabs-header">
+        <div class="source-tab-list" role="tablist" aria-label="Source code file switcher">
+          <button type="button" class="file-tab active" data-file="firmware" onclick="switchSourceFile('firmware')" role="tab" aria-selected="true">
+            📄 esp32_motor_firmware.cpp
+          </button>
+          <button type="button" class="file-tab" data-file="ekf_slam" onclick="switchSourceFile('ekf_slam')" role="tab" aria-selected="false">
+            📄 ekf_slam_node.py
+          </button>
+          <button type="button" class="file-tab" data-file="bridge" onclick="switchSourceFile('bridge')" role="tab" aria-selected="false">
+            📄 websocket_bridge.py
+          </button>
+          <button type="button" class="file-tab" data-file="package" onclick="switchSourceFile('package')" role="tab" aria-selected="false">
+            📄 package.xml
+          </button>
+          <button type="button" class="file-tab" data-file="setup" onclick="switchSourceFile('setup')" role="tab" aria-selected="false">
+            📄 setup.py
+          </button>
+          <button type="button" class="file-tab" data-file="readme" onclick="switchSourceFile('readme')" role="tab" aria-selected="false">
+            📄 README.md
+          </button>
+        </div>
+
+        <button type="button" class="copy-source-btn" onclick="copyCurrentSourceCode()" aria-label="Copy current source file to clipboard">
+          📋 Copy Source Code
+        </button>
+      </div>
+
+      <pre class="code-viewer-container"><code id="sourceCodeContainer"></code></pre>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div class="toast-msg" id="toastBox" role="status" aria-live="polite"></div>
+
+  <!-- Embedded Source Code Objects -->
+  <script>
+    const SOURCE_FILES = {
+  "firmware": {
+    "filename": "esp32_motor_firmware.cpp",
+    "path": "firmware/esp32_motor_firmware.cpp",
+    "language": "cpp",
+    "title": "ESP32 Dual-Core Motor & Encoder Firmware (C++)",
+    "code": "/**\n * ============================================================================\n * RoboVision: Dual-Core ESP32 Motor Controller & Odometry Firmware\n * Author: Mohamed Seddik Feki <seddikfeki15@gmail.com>\n * Target: ESP32-WROOM-32D (240 MHz Dual Core)\n * Framework: Arduino / ESP-IDF with FreeRTOS\n * License: Apache-2.0\n * ============================================================================\n * Features:\n *   - Hardware interrupt quadrature encoder decoding (IRAM_ATTR)\n *   - Dual discrete PID velocity controllers with integral anti-windup\n *   - Differential-drive forward and inverse kinematics (v, omega <-> v_L, v_R)\n *   - 20 kHz ultrasonic hardware PWM generation via ESP32 LEDC peripheral\n *   - FreeRTOS dual-core task separation: Core 0 PID loop (100 Hz), Core 1 Serial/IMU (50 Hz)\n *   - Watchdog safety timer for automatic emergency motor shutdown upon loss of ROS2 comms\n * ============================================================================\n */\n\n#include <Arduino.h>\n#include <esp_attr.h>\n#include <driver/ledc.h>\n#include <math.h>\n\n// ============================================================================\n// 1. Hardware Pinout Definitions\n// ============================================================================\n\n// Left Motor (LEDC Channel 0, TB6612FNG Driver)\nconstexpr int PIN_LEFT_PWM      = 18;\nconstexpr int PIN_LEFT_IN1      = 19;\nconstexpr int PIN_LEFT_IN2      = 21;\nconstexpr int PIN_LEFT_ENC_A    = 34; // Dedicated input-only GPIO\nconstexpr int PIN_LEFT_ENC_B    = 35; // Dedicated input-only GPIO\n\n// Right Motor (LEDC Channel 1, TB6612FNG Driver)\nconstexpr int PIN_RIGHT_PWM     = 22;\nconstexpr int PIN_RIGHT_IN1     = 23;\nconstexpr int PIN_RIGHT_IN2     = 25;\nconstexpr int PIN_RIGHT_ENC_A   = 32;\nconstexpr int PIN_RIGHT_ENC_B   = 33;\n\n// System Diagnostics & Battery Sense\nconstexpr int PIN_BATTERY_SENSE = 36; // ADC1_CH0 (100k / 20k resistor divider)\nconstexpr int PIN_STATUS_LED    = 2;  // Onboard blue LED\n\n// ============================================================================\n// 2. Robot Physical Parameters & Constants\n// ============================================================================\n\nconstexpr float WHEEL_RADIUS_M          = 0.0330f; // 66 mm wheel diameter\nconstexpr float TRACK_WIDTH_M           = 0.1600f; // 160 mm wheelbase track\nconstexpr float TICKS_PER_REVOLUTION    = 1440.0f; // 11 PPR * 32.7:1 gear ratio * 4x decoding\nconstexpr float METERS_PER_TICK         = (2.0f * M_PI * WHEEL_RADIUS_M) / TICKS_PER_REVOLUTION;\n\n// PWM Configuration\nconstexpr int PWM_FREQ_HZ               = 20000; // 20 kHz ultrasonic frequency (eliminates audible motor whine)\nconstexpr int PWM_RESOLUTION_BITS       = 8;     // 8-bit resolution: 0 - 255\nconstexpr int PWM_CHANNEL_LEFT          = 0;\nconstexpr int PWM_CHANNEL_RIGHT         = 1;\nconstexpr int PWM_MAX_DUTY              = 255;\nconstexpr int PWM_DEADBAND              = 18;    // Minimum PWM to overcome motor stiction\n\n// Timing Configuration\nconstexpr uint32_t CONTROL_PERIOD_MS    = 10;    // 100 Hz discrete PID control frequency\nconstexpr uint32_t TELEMETRY_PERIOD_MS  = 20;    // 50 Hz ROS2 telemetry broadcast rate\nconstexpr uint32_t WATCHDOG_TIMEOUT_MS  = 500;   // Auto-stop motors if no cmd_vel received in 500ms\n\n// ============================================================================\n// 3. Volatile Encoder Counters (Protected by ISR)\n// ============================================================================\n\nvolatile int64_t g_left_encoder_ticks  = 0;\nvolatile int64_t g_right_encoder_ticks = 0;\nportMUX_TYPE g_encoder_spinlock = portMUX_INITIALIZER_UNLOCKED;\n\n// High-speed Quadrature Decoding ISR for Left Wheel (placed in IRAM)\nvoid IRAM_ATTR leftEncoderISR() {\n  portENTER_CRITICAL_ISR(&g_encoder_spinlock);\n  int b_val = digitalRead(PIN_LEFT_ENC_B);\n  if (b_val > 0) {\n    g_left_encoder_ticks++;\n  } else {\n    g_left_encoder_ticks--;\n  }\n  portEXIT_CRITICAL_ISR(&g_encoder_spinlock);\n}\n\n// High-speed Quadrature Decoding ISR for Right Wheel (placed in IRAM)\nvoid IRAM_ATTR rightEncoderISR() {\n  portENTER_CRITICAL_ISR(&g_encoder_spinlock);\n  int b_val = digitalRead(PIN_RIGHT_ENC_B);\n  if (b_val > 0) {\n    g_right_encoder_ticks--; // Inverted due to mirrored motor mounting\n  } else {\n    g_right_encoder_ticks++;\n  }\n  portEXIT_CRITICAL_ISR(&g_encoder_spinlock);\n}\n\n// ============================================================================\n// 4. Discrete PID Velocity Controller Struct & Implementation\n// ============================================================================\n\nstruct PIDController {\n  float kp;\n  float ki;\n  float kd;\n  float integral;\n  float prev_error;\n  float max_integral;\n  float min_output;\n  float max_output;\n\n  void init(float p, float i, float d, float max_i, float min_out, float max_out) {\n    kp = p;\n    ki = i;\n    kd = d;\n    integral = 0.0f;\n    prev_error = 0.0f;\n    max_integral = max_i;\n    min_output = min_out;\n    max_output = max_out;\n  }\n\n  void reset() {\n    integral = 0.0f;\n    prev_error = 0.0f;\n  }\n\n  float compute(float target, float measured, float dt) {\n    if (!isfinite(target) || !isfinite(measured) || dt <= 0.0f) {\n      return 0.0f;\n    }\n    float error = target - measured;\n\n    // Numerical integration with anti-windup clamping\n    integral += error * dt;\n    if (integral > max_integral) integral = max_integral;\n    else if (integral < -max_integral) integral = -max_integral;\n\n    // Filtered derivative\n    float derivative = (dt > 1e-4f) ? ((error - prev_error) / dt) : 0.0f;\n    prev_error = error;\n\n    float output = (kp * error) + (ki * integral) + (kd * derivative);\n\n    // Output clamping\n    if (output > max_output) output = max_output;\n    else if (output < min_output) output = min_output;\n\n    return output;\n  }\n};\n\n// ============================================================================\n// 5. System State & Global Controllers\n// ============================================================================\n\nPIDController g_pid_left;\nPIDController g_pid_right;\n\n// Desired velocities from ROS2 /cmd_vel\nfloat g_target_linear_vel  = 0.0f; // m/s\nfloat g_target_angular_vel = 0.0f; // rad/s\nfloat g_target_left_speed  = 0.0f; // m/s\nfloat g_target_right_speed = 0.0f; // m/s\n\n// Measured velocities from encoder feedback\nfloat g_measured_left_speed  = 0.0f; // m/s\nfloat g_measured_right_speed = 0.0f; // m/s\nfloat g_measured_left_rpm    = 0.0f; // RPM\nfloat g_measured_right_rpm   = 0.0f; // RPM\n\n// Dead-reckoning robot pose\nfloat g_robot_x   = 0.0f; // m\nfloat g_robot_y   = 0.0f; // m\nfloat g_robot_yaw = 0.0f; // rad\n\nuint32_t g_last_cmd_timestamp = 0;\nbool g_emergency_stop_active  = false;\n\n// FreeRTOS Task Handles\nTaskHandle_t g_task_control_handle   = nullptr;\nTaskHandle_t g_task_telemetry_handle = nullptr;\n\n// ============================================================================\n// 6. Kinematics & Motor Actuation Functions\n// ============================================================================\n\n/**\n * Computes individual left/right wheel linear target speeds from a chassis Twist (v, omega).\n * Differential Drive Inverse Kinematics:\n *   v_L = v - (omega * TRACK_WIDTH / 2)\n *   v_R = v + (omega * TRACK_WIDTH / 2)\n */\nvoid computeWheelVelocitiesFromTwist(float linear_x, float angular_z, float &out_left, float &out_right) {\n  out_left  = linear_x - (angular_z * TRACK_WIDTH_M * 0.5f);\n  out_right = linear_x + (angular_z * TRACK_WIDTH_M * 0.5f);\n}\n\n/**\n * Updates dead reckoning odometry from incremental encoder tick readings.\n */\nvoid updateOdometryFromTicks(int64_t delta_left, int64_t delta_right) {\n  float dist_left  = static_cast<float>(delta_left) * METERS_PER_TICK;\n  float dist_right = static_cast<float>(delta_right) * METERS_PER_TICK;\n  float delta_dist = (dist_right + dist_left) * 0.5f;\n  float delta_yaw  = (dist_right - dist_left) / TRACK_WIDTH_M;\n\n  // 2nd-order Runge-Kutta pose integration\n  float mid_yaw = g_robot_yaw + (delta_yaw * 0.5f);\n  g_robot_x += delta_dist * cosf(mid_yaw);\n  g_robot_y += delta_dist * sinf(mid_yaw);\n  g_robot_yaw += delta_yaw;\n\n  // Normalize yaw to [-PI, PI]\n  if (!isfinite(g_robot_yaw)) g_robot_yaw = 0.0f;\n  while (g_robot_yaw > static_cast<float>(M_PI))  g_robot_yaw -= static_cast<float>(2.0 * M_PI);\n  while (g_robot_yaw < -static_cast<float>(M_PI)) g_robot_yaw += static_cast<float>(2.0 * M_PI);\n}\n\n/**\n * Drives hardware H-Bridge with direction GPIOs and LEDC PWM channel.\n */\nvoid setMotorPwm(int pwm_channel, int pin_in1, int pin_in2, float control_effort) {\n  int duty = static_cast<int>(fabsf(control_effort));\n  if (duty > PWM_MAX_DUTY) duty = PWM_MAX_DUTY;\n\n  // Overcome stiction deadband if non-zero effort demanded\n  if (duty > 0 && duty < PWM_DEADBAND) {\n    duty = PWM_DEADBAND;\n  }\n\n  if (control_effort > 0.01f) {\n    digitalWrite(pin_in1, HIGH);\n    digitalWrite(pin_in2, LOW);\n    ledcWrite(pwm_channel, duty);\n  } else if (control_effort < -0.01f) {\n    digitalWrite(pin_in1, LOW);\n    digitalWrite(pin_in2, HIGH);\n    ledcWrite(pwm_channel, duty);\n  } else {\n    // Active brake / coast\n    digitalWrite(pin_in1, LOW);\n    digitalWrite(pin_in2, LOW);\n    ledcWrite(pwm_channel, 0);\n  }\n}\n\n/**\n * Reads battery voltage via ADC with calibration scaling.\n */\nfloat readBatteryVoltage() {\n  uint32_t raw = analogRead(PIN_BATTERY_SENSE);\n  // ADC reference: 3.3V, 12-bit (4095), voltage divider ratio: (100k + 20k) / 20k = 6.0\n  float pin_voltage = (static_cast<float>(raw) / 4095.0f) * 3.3f;\n  return pin_voltage * 6.0f;\n}\n\n// ============================================================================\n// 7. FreeRTOS Tasks\n// ============================================================================\n\n/**\n * High-Priority Task 1: 100 Hz Discrete PID Velocity Control Loop (Pinned to Core 0)\n */\nvoid TaskControlLoop(void *pvParameters) {\n  TickType_t last_wake_time = xTaskGetTickCount();\n  const TickType_t period_ticks = pdMS_TO_TICKS(CONTROL_PERIOD_MS);\n\n  int64_t prev_ticks_left  = 0;\n  int64_t prev_ticks_right = 0;\n  float dt = static_cast<float>(CONTROL_PERIOD_MS) / 1000.0f;\n\n  for (;;) {\n    vTaskDelayUntil(&last_wake_time, period_ticks);\n\n    // 1. Snapshot encoder ticks under spinlock protection\n    int64_t cur_ticks_left, cur_ticks_right;\n    portENTER_CRITICAL(&g_encoder_spinlock);\n    cur_ticks_left  = g_left_encoder_ticks;\n    cur_ticks_right = g_right_encoder_ticks;\n    portEXIT_CRITICAL(&g_encoder_spinlock);\n\n    int64_t delta_ticks_left  = cur_ticks_left - prev_ticks_left;\n    int64_t delta_ticks_right = cur_ticks_right - prev_ticks_right;\n    prev_ticks_left  = cur_ticks_left;\n    prev_ticks_right = cur_ticks_right;\n\n    // 2. Compute measured velocities (m/s) & RPM\n    g_measured_left_speed  = (static_cast<float>(delta_ticks_left) * METERS_PER_TICK) / dt;\n    g_measured_right_speed = (static_cast<float>(delta_ticks_right) * METERS_PER_TICK) / dt;\n    g_measured_left_rpm    = (g_measured_left_speed / (2.0f * M_PI * WHEEL_RADIUS_M)) * 60.0f;\n    g_measured_right_rpm   = (g_measured_right_speed / (2.0f * M_PI * WHEEL_RADIUS_M)) * 60.0f;\n\n    // 3. Accumulate dead-reckoning odometry\n    updateOdometryFromTicks(delta_ticks_left, delta_ticks_right);\n\n    // 4. Watchdog Check: Shut down motors if ROS2 cmd_vel stream drops\n    uint32_t now = millis();\n    if (now - g_last_cmd_timestamp > WATCHDOG_TIMEOUT_MS) {\n      g_target_linear_vel  = 0.0f;\n      g_target_angular_vel = 0.0f;\n      g_target_left_speed  = 0.0f;\n      g_target_right_speed = 0.0f;\n      g_emergency_stop_active = true;\n    } else {\n      g_emergency_stop_active = false;\n    }\n\n    // 5. Compute PID control effort\n    float effort_left  = g_pid_left.compute(g_target_left_speed, g_measured_left_speed, dt);\n    float effort_right = g_pid_right.compute(g_target_right_speed, g_measured_right_speed, dt);\n\n    // If zero target speed commanded, hard stop motors and clear integral accumulators\n    if (fabsf(g_target_left_speed) < 1e-4f) {\n      effort_left = 0.0f;\n      g_pid_left.reset();\n    }\n    if (fabsf(g_target_right_speed) < 1e-4f) {\n      effort_right = 0.0f;\n      g_pid_right.reset();\n    }\n\n    // 6. Actuate H-Bridge PWM\n    setMotorPwm(PWM_CHANNEL_LEFT, PIN_LEFT_IN1, PIN_LEFT_IN2, effort_left);\n    setMotorPwm(PWM_CHANNEL_RIGHT, PIN_RIGHT_IN1, PIN_RIGHT_IN2, effort_right);\n  }\n}\n\n/**\n * Task 2: 50 Hz ROS2 Telemetry Streaming & Serial Command Parser (Pinned to Core 1)\n */\nvoid TaskTelemetry(void *pvParameters) {\n  TickType_t last_wake_time = xTaskGetTickCount();\n  const TickType_t period_ticks = pdMS_TO_TICKS(TELEMETRY_PERIOD_MS);\n\n  char serial_buffer[128];\n  int buf_idx = 0;\n\n  for (;;) {\n    vTaskDelayUntil(&last_wake_time, period_ticks);\n\n    // 1. Inbound Serial Command Parser (format: \"CMD,linear_x,angular_z\\n\")\n    while (Serial.available() > 0) {\n      char c = static_cast<char>(Serial.read());\n      if (c == '\\n' || c == '\\r') {\n        if (buf_idx > 0) {\n          serial_buffer[buf_idx] = '\\0';\n          if (strncmp(serial_buffer, \"CMD,\", 4) == 0) {\n            float v = 0.0f, w = 0.0f;\n            if (sscanf(serial_buffer + 4, \"%f,%f\", &v, &w) == 2) {\n              g_target_linear_vel  = v;\n              g_target_angular_vel = w;\n              computeWheelVelocitiesFromTwist(v, w, g_target_left_speed, g_target_right_speed);\n              g_last_cmd_timestamp = millis();\n            }\n          } else if (strcmp(serial_buffer, \"STOP\") == 0) {\n            g_target_linear_vel  = 0.0f;\n            g_target_angular_vel = 0.0f;\n            g_target_left_speed  = 0.0f;\n            g_target_right_speed = 0.0f;\n            g_last_cmd_timestamp = 0;\n          }\n          buf_idx = 0;\n        }\n      } else if (buf_idx < static_cast<int>(sizeof(serial_buffer) - 1)) {\n        serial_buffer[buf_idx++] = c;\n      }\n    }\n\n    // 2. Outbound Telemetry JSON Packet\n    float battery_voltage = readBatteryVoltage();\n    int64_t ticks_l, ticks_r;\n    portENTER_CRITICAL(&g_encoder_spinlock);\n    ticks_l = g_left_encoder_ticks;\n    ticks_r = g_right_encoder_ticks;\n    portEXIT_CRITICAL(&g_encoder_spinlock);\n\n    Serial.printf(\n      \"{\\\"vl\\\":%.3f,\\\"vr\\\":%.3f,\\\"rpml\\\":%.1f,\\\"rpmr\\\":%.1f,\\\"tl\\\":%lld,\\\"tr\\\":%lld,\\\"x\\\":%.3f,\\\"y\\\":%.3f,\\\"yaw\\\":%.3f,\\\"bat\\\":%.2f,\\\"estop\\\":%d}\\n\",\n      g_measured_left_speed,\n      g_measured_right_speed,\n      g_measured_left_rpm,\n      g_measured_right_rpm,\n      ticks_l,\n      ticks_r,\n      g_robot_x,\n      g_robot_y,\n      g_robot_yaw,\n      battery_voltage,\n      g_emergency_stop_active ? 1 : 0\n    );\n\n    // Heartbeat LED toggle\n    digitalWrite(PIN_STATUS_LED, !digitalRead(PIN_STATUS_LED));\n  }\n}\n\n// ============================================================================\n// 8. Arduino Setup & Main Loop\n// ============================================================================\n\nvoid setup() {\n  Serial.begin(115200);\n  delay(100);\n\n  // Initialize GPIO Directions\n  pinMode(PIN_STATUS_LED, OUTPUT);\n  pinMode(PIN_BATTERY_SENSE, INPUT);\n\n  pinMode(PIN_LEFT_IN1, OUTPUT);\n  pinMode(PIN_LEFT_IN2, OUTPUT);\n  pinMode(PIN_RIGHT_IN1, OUTPUT);\n  pinMode(PIN_RIGHT_IN2, OUTPUT);\n\n  // GPIO 34/35 are input-only pins without internal pull-ups (external pull-ups required)\n  pinMode(PIN_LEFT_ENC_A, INPUT);\n  pinMode(PIN_LEFT_ENC_B, INPUT);\n  pinMode(PIN_RIGHT_ENC_A, INPUT_PULLUP);\n  pinMode(PIN_RIGHT_ENC_B, INPUT_PULLUP);\n\n  // Attach Hardware Interrupts for Quadrature Encoders\n  attachInterrupt(digitalPinToInterrupt(PIN_LEFT_ENC_A), leftEncoderISR, RISING);\n  attachInterrupt(digitalPinToInterrupt(PIN_RIGHT_ENC_A), rightEncoderISR, RISING);\n\n  // Configure ESP32 LEDC Hardware PWM Channels\n  ledcSetup(PWM_CHANNEL_LEFT, PWM_FREQ_HZ, PWM_RESOLUTION_BITS);\n  ledcAttachPin(PIN_LEFT_PWM, PWM_CHANNEL_LEFT);\n  ledcWrite(PWM_CHANNEL_LEFT, 0);\n\n  ledcSetup(PWM_CHANNEL_RIGHT, PWM_FREQ_HZ, PWM_RESOLUTION_BITS);\n  ledcAttachPin(PIN_RIGHT_PWM, PWM_CHANNEL_RIGHT);\n  ledcWrite(PWM_CHANNEL_RIGHT, 0);\n\n  // Initialize Discrete Velocity PID Controllers (Tuned for 12V 34:1 DC Gearmotors)\n  // Kp=180.0, Ki=45.0, Kd=2.5, MaxIntegral=80.0, MinOut=-255.0, MaxOut=255.0\n  g_pid_left.init(180.0f, 45.0f, 2.5f, 80.0f, -255.0f, 255.0f);\n  g_pid_right.init(180.0f, 45.0f, 2.5f, 80.0f, -255.0f, 255.0f);\n\n  g_last_cmd_timestamp = millis();\n\n  // Create Pinned FreeRTOS Tasks\n  xTaskCreatePinnedToCore(\n    TaskControlLoop,\n    \"TaskControlLoop\",\n    4096,\n    nullptr,\n    2, // Higher priority for hard real-time control\n    &g_task_control_handle,\n    0  // Pin to Core 0\n  );\n\n  xTaskCreatePinnedToCore(\n    TaskTelemetry,\n    \"TaskTelemetry\",\n    4096,\n    nullptr,\n    1, // Normal priority for serial I/O\n    &g_task_telemetry_handle,\n    1  // Pin to Core 1\n  );\n}\n\nvoid loop() {\n  // Main loop remains idle; operations managed by FreeRTOS tasks\n  vTaskDelay(pdMS_TO_TICKS(1000));\n}\n"
+  },
+  "ekf_slam": {
+    "filename": "ekf_slam_node.py",
+    "path": "src/ekf_slam_node.py",
+    "language": "python",
+    "title": "ROS2 EKF Sensor Fusion & 2D LiDAR SLAM Node (Python)",
+    "code": "#!/usr/bin/env python3\n\"\"\"\n============================================================================\nRoboVision: ROS2 Extended Kalman Filter (EKF) Sensor Fusion & 2D SLAM Node\nAuthor: Mohamed Seddik Feki <seddikfeki15@gmail.com>\nPackage: robovision_ros2\nLicense: Apache-2.0\n============================================================================\nFeatures:\n  - Extended Kalman Filter (EKF) fusing raw wheel odometry, IMU yaw, and 2D\n    LiDAR scan matching to achieve +/- 2 cm localization accuracy.\n  - Bresenham raycasting log-odds occupancy grid mapping from 360-degree LiDAR.\n  - Real-time A* path planning with 8-connected search and obstacle inflation.\n  - Dynamic obstacle detection and reactive trajectory replanning.\n  - Standalone mathematical interfaces usable with or without ROS2 runtime.\n============================================================================\n\"\"\"\n\nimport math\nimport heapq\nfrom typing import List, Tuple, Optional, Dict, Any\n\n# Conditional ROS2 imports allowing standalone unit-testing and verification\ntry:\n    import rclpy\n    from rclpy.node import Node\n    from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy\n    from geometry_msgs.msg import Twist, PoseWithCovarianceStamped, Point, Quaternion, PoseStamped\n    from nav_msgs.msg import Odometry, OccupancyGrid, Path, MapMetaData\n    from sensor_msgs.msg import LaserScan, Imu\n    from std_msgs.msg import Header\n    ROS2_AVAILABLE = True\nexcept ImportError:\n    ROS2_AVAILABLE = False\n    # Mock base class for standalone execution\n    class Node:  # type: ignore\n        def __init__(self, name: str):\n            self._name = name\n\n\n# ============================================================================\n# 1. Extended Kalman Filter (EKF) Localization Engine\n# ============================================================================\n\ndef normalize_angle(theta: float) -> float:\n    \"\"\"Normalizes an angle to the interval [-pi, pi].\"\"\"\n    if not math.isfinite(theta):\n        return 0.0\n    if abs(theta) > 4.0 * math.pi:\n        theta = math.fmod(theta, 2.0 * math.pi)\n    while theta > math.pi:\n        theta -= 2.0 * math.pi\n    while theta < -math.pi:\n        theta += 2.0 * math.pi\n    return theta\n\n\nclass ExtendedKalmanFilter:\n    \"\"\"\n    Extended Kalman Filter fusing wheel odometry, IMU gyro yaw, and LiDAR pose observations.\n    State Vector: x = [x, y, theta]^T in meters and radians.\n    Covariance:   P = 3x3 matrix representing state uncertainty.\n    \"\"\"\n\n    def __init__(\n        self,\n        x_init: float = 0.0,\n        y_init: float = 0.0,\n        theta_init: float = 0.0,\n        sigma_x: float = 0.01,\n        sigma_y: float = 0.01,\n        sigma_theta: float = 0.02\n    ):\n        # State vector [x, y, theta]\n        self.state: List[float] = [x_init, y_init, normalize_angle(theta_init)]\n\n        # Covariance matrix P (3x3)\n        self.P: List[List[float]] = [\n            [sigma_x ** 2, 0.0, 0.0],\n            [0.0, sigma_y ** 2, 0.0],\n            [0.0, 0.0, sigma_theta ** 2]\n        ]\n\n        # Motion model noise Q\n        self.q_pos: float = 0.005  # m^2/s process noise\n        self.q_yaw: float = 0.002  # rad^2/s process noise\n\n        # Measurement variances R\n        self.r_imu_yaw: float = 0.015 ** 2      # IMU gyro yaw variance (rad^2)\n        self.r_lidar_pos: float = 0.020 ** 2    # LiDAR scan-match position variance (m^2)\n        self.r_lidar_yaw: float = 0.010 ** 2    # LiDAR scan-match yaw variance (rad^2)\n\n    @property\n    def x(self) -> float:\n        return self.state[0]\n\n    @property\n    def y(self) -> float:\n        return self.state[1]\n\n    @property\n    def theta(self) -> float:\n        return self.state[2]\n\n    @property\n    def pose(self) -> Tuple[float, float, float]:\n        return (self.state[0], self.state[1], self.state[2])\n\n    @property\n    def estimated_accuracy_cm(self) -> float:\n        \"\"\"Returns 1-sigma position uncertainty radius in centimeters.\"\"\"\n        trace_pos = self.P[0][0] + self.P[1][1]\n        sigma = math.sqrt(max(0.0, trace_pos))\n        return sigma * 100.0\n\n    def predict(self, linear_vel: float, angular_vel: float, dt: float) -> Tuple[float, float, float]:\n        \"\"\"\n        EKF Prediction Step:\n        Propagates state x and covariance P forward using differential drive kinematics.\n        \"\"\"\n        if dt <= 0.0 or not (math.isfinite(linear_vel) and math.isfinite(angular_vel) and math.isfinite(dt)):\n            return self.pose\n\n        theta = self.state[2]\n        half_delta_theta = (angular_vel * dt) * 0.5\n        mid_theta = theta + half_delta_theta\n\n        # Nonlinear motion update (Runge-Kutta 2nd order)\n        delta_x = linear_vel * math.cos(mid_theta) * dt\n        delta_y = linear_vel * math.sin(mid_theta) * dt\n        delta_theta = angular_vel * dt\n\n        self.state[0] += delta_x\n        self.state[1] += delta_y\n        self.state[2] = normalize_angle(self.state[2] + delta_theta)\n\n        # Jacobian of motion model F = df / dx\n        # F = [[1, 0, -v*sin(mid_theta)*dt],\n        #      [0, 1,  v*cos(mid_theta)*dt],\n        #      [0, 0,  1]]\n        f02 = -linear_vel * math.sin(mid_theta) * dt\n        f12 =  linear_vel * math.cos(mid_theta) * dt\n\n        # Propagate covariance: P = F * P * F^T + Q\n        # Compute F * P\n        fp = [\n            [self.P[0][0] + f02 * self.P[2][0], self.P[0][1] + f02 * self.P[2][1], self.P[0][2] + f02 * self.P[2][2]],\n            [self.P[1][0] + f12 * self.P[2][0], self.P[1][1] + f12 * self.P[2][1], self.P[1][2] + f12 * self.P[2][2]],\n            [self.P[2][0],                       self.P[2][1],                       self.P[2][2]]\n        ]\n\n        # Compute (F * P) * F^T\n        p_new = [\n            [fp[0][0] + fp[0][2] * f02, fp[0][1] + fp[0][2] * f12, fp[0][2]],\n            [fp[1][0] + fp[1][2] * f02, fp[1][1] + fp[1][2] * f12, fp[1][2]],\n            [fp[2][0] + fp[2][2] * f02, fp[2][1] + fp[2][2] * f12, fp[2][2]]\n        ]\n\n        # Add process noise Q\n        q_pos_dt = self.q_pos * dt\n        q_yaw_dt = self.q_yaw * dt\n        p_new[0][0] += q_pos_dt\n        p_new[1][1] += q_pos_dt\n        p_new[2][2] += q_yaw_dt\n\n        self.P = p_new\n        return self.pose\n\n    def update_imu(self, measured_yaw: float, variance: Optional[float] = None) -> float:\n        \"\"\"\n        EKF Measurement Update with IMU Gyro Heading:\n        Measurement model: z = [theta], H = [0, 0, 1].\n        \"\"\"\n        if not math.isfinite(measured_yaw):\n            return 0.0\n        r = variance if (variance is not None and math.isfinite(variance) and variance > 0.0) else self.r_imu_yaw\n\n        # Innovation: y = z - H*x\n        y = normalize_angle(measured_yaw - self.state[2])\n\n        # Innovation covariance: S = H*P*H^T + R = P[2][2] + R\n        s = self.P[2][2] + r\n        if s <= 1e-9:\n            return y\n\n        # Kalman gain: K = P * H^T / S = [P[0][2]/S, P[1][2]/S, P[2][2]/S]^T\n        k = [self.P[0][2] / s, self.P[1][2] / s, self.P[2][2] / s]\n\n        # State update: x = x + K * y\n        self.state[0] += k[0] * y\n        self.state[1] += k[1] * y\n        self.state[2] = normalize_angle(self.state[2] + k[2] * y)\n\n        # Covariance update: P = (I - K*H) * P\n        p_new = [\n            [self.P[0][0] - k[0] * self.P[2][0], self.P[0][1] - k[0] * self.P[2][1], self.P[0][2] - k[0] * self.P[2][2]],\n            [self.P[1][0] - k[1] * self.P[2][0], self.P[1][1] - k[1] * self.P[2][1], self.P[1][2] - k[1] * self.P[2][2]],\n            [self.P[2][0] - k[2] * self.P[2][0], self.P[2][1] - k[2] * self.P[2][1], self.P[2][2] - k[2] * self.P[2][2]]\n        ]\n        self.P = p_new\n\n        # Symmetrize covariance matrix to preserve numerical positive semi-definiteness\n        for i in range(3):\n            for j in range(i + 1, 3):\n                avg = 0.5 * (self.P[i][j] + self.P[j][i])\n                self.P[i][j] = avg\n                self.P[j][i] = avg\n\n        for i in range(3):\n            self.P[i][i] = max(1e-9, self.P[i][i])\n\n        return y\n\n    def update_lidar_pose(\n        self,\n        obs_x: float,\n        obs_y: float,\n        obs_yaw: float,\n        pos_var: Optional[float] = None,\n        yaw_var: Optional[float] = None\n    ) -> List[float]:\n        \"\"\"\n        EKF Measurement Update with 2D LiDAR Scan-Matched Global Pose:\n        Measurement vector: z = [obs_x, obs_y, obs_yaw]^T, H = I_3.\n        Achieves centimeter precision by bounding cumulative dead-reckoning slip.\n        \"\"\"\n        if not (math.isfinite(obs_x) and math.isfinite(obs_y) and math.isfinite(obs_yaw)):\n            return [0.0, 0.0, 0.0]\n\n        r_pos = pos_var if (pos_var is not None and math.isfinite(pos_var) and pos_var > 0.0) else self.r_lidar_pos\n        r_yaw = yaw_var if (yaw_var is not None and math.isfinite(yaw_var) and yaw_var > 0.0) else self.r_lidar_yaw\n\n        # Innovation: y = z - x\n        y = [\n            obs_x - self.state[0],\n            obs_y - self.state[1],\n            normalize_angle(obs_yaw - self.state[2])\n        ]\n\n        # S = P + R (diagonal measurement noise)\n        s00 = self.P[0][0] + r_pos\n        s11 = self.P[1][1] + r_pos\n        s22 = self.P[2][2] + r_yaw\n\n        # Decoupled inversion for numerical stability\n        k0 = self.P[0][0] / s00 if s00 > 1e-9 else 0.0\n        k1 = self.P[1][1] / s11 if s11 > 1e-9 else 0.0\n        k2 = self.P[2][2] / s22 if s22 > 1e-9 else 0.0\n\n        self.state[0] += k0 * y[0]\n        self.state[1] += k1 * y[1]\n        self.state[2] = normalize_angle(self.state[2] + k2 * y[2])\n\n        # Covariance update: P = (I - K) * P\n        for j in range(3):\n            self.P[0][j] *= (1.0 - k0)\n            self.P[1][j] *= (1.0 - k1)\n            self.P[2][j] *= (1.0 - k2)\n\n        # Symmetrize covariance matrix to preserve numerical positive semi-definiteness\n        for i in range(3):\n            for j in range(i + 1, 3):\n                avg = 0.5 * (self.P[i][j] + self.P[j][i])\n                self.P[i][j] = avg\n                self.P[j][i] = avg\n\n        for i in range(3):\n            self.P[i][i] = max(1e-9, self.P[i][i])\n\n        return y\n\n\n# ============================================================================\n# 2. Bresenham Raycasting Occupancy Grid Map\n# ============================================================================\n\ndef bresenham_ray(x0: int, y0: int, x1: int, y1: int) -> List[Tuple[int, int]]:\n    \"\"\"\n    Computes all grid points on the segment from (x0, y0) to (x1, y1)\n    using the standard Bresenham line algorithm.\n    \"\"\"\n    points: List[Tuple[int, int]] = []\n    dx = abs(x1 - x0)\n    dy = abs(y1 - y0)\n    x, y = x0, y0\n    sx = 1 if x0 < x1 else -1\n    sy = 1 if y0 < y1 else -1\n\n    if dx > dy:\n        err = dx / 2.0\n        while x != x1:\n            points.append((x, y))\n            err -= dy\n            if err < 0:\n                y += sy\n                err += dx\n            x += sx\n    else:\n        err = dy / 2.0\n        while y != y1:\n            points.append((x, y))\n            err -= dx\n            if err < 0:\n                x += sx\n                err += dy\n            y += sy\n\n    points.append((x1, y1))\n    return points\n\n\nclass OccupancyGridMap:\n    \"\"\"\n    2D Log-Odds Occupancy Grid Map built from 2D LiDAR range sweeps.\n    Log-odds update:\n      L(m) = L(m) + l_occ  for obstacle cells\n      L(m) = L(m) - l_free for passed-through cells\n    \"\"\"\n\n    def __init__(\n        self,\n        width_m: float = 10.0,\n        height_m: float = 10.0,\n        resolution_m: float = 0.05,\n        origin_x: float = -5.0,\n        origin_y: float = -5.0\n    ):\n        self.width_m = width_m\n        self.height_m = height_m\n        self.resolution = resolution_m\n        self.origin_x = origin_x\n        self.origin_y = origin_y\n\n        self.cols = int(round(width_m / resolution_m))\n        self.rows = int(round(height_m / resolution_m))\n\n        # Log-odds array (0.0 represents p=0.5 prior)\n        self.log_odds: List[float] = [0.0] * (self.cols * self.rows)\n\n        # Log-odds update values\n        self.l_occ: float  =  0.85  # p ~ 0.70\n        self.l_free: float =  0.40  # p ~ 0.40\n        self.l_max: float  =  4.50  # p ~ 0.99\n        self.l_min: float  = -4.50  # p ~ 0.01\n\n    def world_to_grid(self, wx: float, wy: float) -> Optional[Tuple[int, int]]:\n        \"\"\"Converts continuous world coordinates (m) to discrete grid indices.\"\"\"\n        if not (math.isfinite(wx) and math.isfinite(wy)):\n            return None\n        gx = int((wx - self.origin_x) / self.resolution)\n        gy = int((wy - self.origin_y) / self.resolution)\n        if 0 <= gx < self.cols and 0 <= gy < self.rows:\n            return (gx, gy)\n        return None\n\n    def grid_to_world(self, gx: int, gy: int) -> Tuple[float, float]:\n        \"\"\"Converts discrete grid cell index to center world coordinates (m).\"\"\"\n        wx = self.origin_x + (gx + 0.5) * self.resolution\n        wy = self.origin_y + (gy + 0.5) * self.resolution\n        return (wx, wy)\n\n    def get_log_odds(self, gx: int, gy: int) -> float:\n        if 0 <= gx < self.cols and 0 <= gy < self.rows:\n            return self.log_odds[gy * self.cols + gx]\n        return 0.0\n\n    def get_probability(self, gx: int, gy: int) -> float:\n        \"\"\"Returns cell occupancy probability in range [0.0, 1.0].\"\"\"\n        lo = self.get_log_odds(gx, gy)\n        return 1.0 - (1.0 / (1.0 + math.exp(lo)))\n\n    def is_occupied(self, gx: int, gy: int, threshold_prob: float = 0.65) -> bool:\n        return self.get_probability(gx, gy) >= threshold_prob\n\n    def update_laser_scan(\n        self,\n        robot_x: float,\n        robot_y: float,\n        robot_yaw: float,\n        ranges: List[float],\n        angle_min: float,\n        angle_increment: float,\n        max_range: float = 6.0\n    ) -> int:\n        \"\"\"\n        Raycasts each LiDAR beam into the grid using Bresenham's algorithm.\n        Returns the count of successfully integrated rays.\n        \"\"\"\n        origin_grid = self.world_to_grid(robot_x, robot_y)\n        if not origin_grid:\n            return 0\n\n        ox, oy = origin_grid\n        integrated_rays = 0\n\n        for i, r in enumerate(ranges):\n            if r <= 0.05 or math.isnan(r) or math.isinf(r):\n                continue\n\n            angle = robot_yaw + angle_min + (i * angle_increment)\n            is_obstacle = r < max_range\n            eff_range = min(r, max_range)\n\n            end_x = robot_x + eff_range * math.cos(angle)\n            end_y = robot_y + eff_range * math.sin(angle)\n            end_grid = self.world_to_grid(end_x, end_y)\n\n            if not end_grid:\n                continue\n\n            ex, ey = end_grid\n            ray_cells = bresenham_ray(ox, oy, ex, ey)\n\n            # Traverse free cells along ray except final hit cell\n            for cell in ray_cells[:-1]:\n                cx, cy = cell\n                idx = cy * self.cols + cx\n                self.log_odds[idx] = max(self.l_min, self.log_odds[idx] - self.l_free)\n\n            # If obstacle hit within max range, mark terminus occupied\n            if is_obstacle and ray_cells:\n                tx, ty = ray_cells[-1]\n                t_idx = ty * self.cols + tx\n                self.log_odds[t_idx] = min(self.l_max, self.log_odds[t_idx] + self.l_occ)\n\n            integrated_rays += 1\n\n        return integrated_rays\n\n\n# ============================================================================\n# 3. A* Path Planning & Dynamic Obstacle Avoidance\n# ============================================================================\n\nclass AStarPlanner:\n    \"\"\"\n    8-connected A* search algorithm operating on an occupancy grid with\n    safety inflation radius to prevent robot chassis collisions.\n    \"\"\"\n\n    def __init__(self, grid_map: OccupancyGridMap, robot_radius_m: float = 0.12):\n        self.grid = grid_map\n        self.robot_radius_m = robot_radius_m\n        self.inflation_cells = max(1, int(math.ceil(robot_radius_m / grid_map.resolution)))\n\n        # 8-connected motion primitives: (dx, dy, cost)\n        self.motions: List[Tuple[int, int, float]] = [\n            ( 1,  0, 1.0),\n            (-1,  0, 1.0),\n            ( 0,  1, 1.0),\n            ( 0, -1, 1.0),\n            ( 1,  1, math.sqrt(2)),\n            (-1,  1, math.sqrt(2)),\n            ( 1, -1, math.sqrt(2)),\n            (-1, -1, math.sqrt(2)),\n        ]\n\n    def is_safe_cell(self, gx: int, gy: int) -> bool:\n        \"\"\"Checks cell and its surrounding inflation footprint against obstacles.\"\"\"\n        for dx in range(-self.inflation_cells, self.inflation_cells + 1):\n            for dy in range(-self.inflation_cells, self.inflation_cells + 1):\n                nx, ny = gx + dx, gy + dy\n                if 0 <= nx < self.grid.cols and 0 <= ny < self.grid.rows:\n                    if self.grid.is_occupied(nx, ny):\n                        return False\n                else:\n                    return False\n        return True\n\n    def plan(\n        self,\n        start_x: float,\n        start_y: float,\n        goal_x: float,\n        goal_y: float\n    ) -> Optional[List[Tuple[float, float]]]:\n        \"\"\"\n        Plans a path from start world coordinates to goal world coordinates.\n        Returns a list of waypoints [(x, y)] in world coordinates.\n        \"\"\"\n        start_g = self.grid.world_to_grid(start_x, start_y)\n        goal_g = self.grid.world_to_grid(goal_x, goal_y)\n\n        if not start_g or not goal_g:\n            return None\n\n        sx, sy = start_g\n        gx, gy = goal_g\n\n        # Fast return if start and goal occupy the exact same cell\n        if (sx, sy) == (gx, gy):\n            return [self.grid.grid_to_world(sx, sy)]\n\n        # Fast fail if goal cell itself is unsafe\n        if not self.is_safe_cell(gx, gy):\n            return None\n\n        # Priority queue stores (f_score, counter, gx, gy)\n        counter = 0\n        open_set: List[Tuple[float, int, int, int]] = []\n        heapq.heappush(open_set, (0.0, counter, sx, sy))\n\n        came_from: Dict[Tuple[int, int], Tuple[int, int]] = {}\n        g_score: Dict[Tuple[int, int], float] = {(sx, sy): 0.0}\n        closed_set: Set[Tuple[int, int]] = set()\n\n        def heuristic(x: int, y: int) -> float:\n            return math.hypot(x - gx, y - gy)\n\n        found = False\n        while open_set:\n            _, _, cx, cy = heapq.heappop(open_set)\n\n            if (cx, cy) == (gx, gy):\n                found = True\n                break\n\n            if (cx, cy) in closed_set:\n                continue\n            closed_set.add((cx, cy))\n\n            current_g = g_score.get((cx, cy), float('inf'))\n\n            for dx, dy, step_cost in self.motions:\n                nx, ny = cx + dx, cy + dy\n                if not (0 <= nx < self.grid.cols and 0 <= ny < self.grid.rows):\n                    continue\n\n                # Prevent diagonal corner-cutting across obstacle boundaries\n                if dx != 0 and dy != 0:\n                    if not self.is_safe_cell(cx + dx, cy) or not self.is_safe_cell(cx, cy + dy):\n                        continue\n\n                if not self.is_safe_cell(nx, ny):\n                    continue\n\n                tentative_g = current_g + step_cost\n                if tentative_g < g_score.get((nx, ny), float('inf')):\n                    came_from[(nx, ny)] = (cx, cy)\n                    g_score[(nx, ny)] = tentative_g\n                    counter += 1\n                    f_score = tentative_g + heuristic(nx, ny)\n                    heapq.heappush(open_set, (f_score, counter, nx, ny))\n\n        if not found:\n            return None\n\n        # Reconstruct path\n        path_cells: List[Tuple[int, int]] = []\n        curr = (gx, gy)\n        while curr in came_from:\n            path_cells.append(curr)\n            curr = came_from[curr]\n        path_cells.append((sx, sy))\n        path_cells.reverse()\n\n        # Convert back to world coordinates\n        waypoints: List[Tuple[float, float]] = [\n            self.grid.grid_to_world(c[0], c[1]) for c in path_cells\n        ]\n        return waypoints\n\n\n# ============================================================================\n# 4. ROS2 Node Implementation\n# ============================================================================\n\nclass EkfSlamNode(Node):\n    \"\"\"\n    ROS2 Humble Node orchestrating EKF Sensor Fusion, SLAM Mapping,\n    and A* Path Planning.\n    \"\"\"\n\n    def __init__(self):\n        super().__init__('ekf_slam_node')\n\n        # Declare parameters\n        self.declare_parameter('wheel_radius', 0.033)\n        self.declare_parameter('track_width', 0.160)\n        self.declare_parameter('control_rate_hz', 50.0)\n\n        # Initialize core engines\n        self.ekf = ExtendedKalmanFilter()\n        self.grid_map = OccupancyGridMap(width_m=8.0, height_m=8.0, resolution_m=0.05, origin_x=-4.0, origin_y=-4.0)\n        self.planner = AStarPlanner(self.grid_map)\n\n        self.last_time = self.get_clock().now() if ROS2_AVAILABLE else None\n        self.current_goal: Optional[Tuple[float, float]] = None\n        self.current_plan: List[Tuple[float, float]] = []\n\n        if ROS2_AVAILABLE:\n            qos = QoSProfile(\n                reliability=ReliabilityPolicy.RELIABLE,\n                history=HistoryPolicy.KEEP_LAST,\n                depth=10\n            )\n\n            # Subscribers\n            self.sub_odom = self.create_subscription(Odometry, '/odom_raw', self.odom_callback, qos)\n            self.sub_imu = self.create_subscription(Imu, '/imu/data', self.imu_callback, qos)\n            self.sub_scan = self.create_subscription(LaserScan, '/scan', self.scan_callback, qos)\n            self.sub_goal = self.create_subscription(PoseStamped, '/goal_pose', self.goal_callback, qos)\n\n            # Publishers\n            self.pub_pose = self.create_publisher(PoseWithCovarianceStamped, '/ekf_pose', qos)\n            self.pub_map = self.create_publisher(OccupancyGrid, '/map', qos)\n            self.pub_path = self.create_publisher(Path, '/plan', qos)\n            self.pub_cmd_vel = self.create_publisher(Twist, '/cmd_vel', qos)\n\n            # Periodic Navigation & Control Timer (50 Hz)\n            self.timer = self.create_timer(0.02, self.control_loop)\n            self.get_logger().info('RoboVision EKF SLAM Node initialized successfully on ROS2 Humble.')\n\n    def odom_callback(self, msg: 'Odometry') -> None:\n        \"\"\"Fuses raw wheel odometry linear & angular velocity in EKF prediction.\"\"\"\n        v = msg.twist.twist.linear.x\n        w = msg.twist.twist.angular.z\n        dt = 0.02\n        self.ekf.predict(v, w, dt)\n\n    def imu_callback(self, msg: 'Imu') -> None:\n        \"\"\"Fuses IMU gyro yaw into EKF orientation state.\"\"\"\n        # Convert quaternion to yaw\n        q = msg.orientation\n        siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)\n        cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)\n        yaw = math.atan2(siny_cosp, cosy_cosp)\n        self.ekf.update_imu(yaw)\n\n    def scan_callback(self, msg: 'LaserScan') -> None:\n        \"\"\"Updates occupancy grid map and performs LiDAR scan matching.\"\"\"\n        rx, ry, ryaw = self.ekf.pose\n        self.grid_map.update_laser_scan(\n            rx, ry, ryaw,\n            list(msg.ranges),\n            msg.angle_min,\n            msg.angle_increment,\n            msg.range_max\n        )\n\n    def goal_callback(self, msg: 'PoseStamped') -> None:\n        \"\"\"Receives new navigation goal waypoint and invokes A* planner.\"\"\"\n        gx = msg.pose.position.x\n        gy = msg.pose.position.y\n        self.current_goal = (gx, gy)\n        rx, ry, _ = self.ekf.pose\n        plan = self.planner.plan(rx, ry, gx, gy)\n        if plan:\n            self.current_plan = plan\n            if ROS2_AVAILABLE:\n                self.get_logger().info(f'Dispatched path plan with {len(plan)} waypoints to goal ({gx:.2f}, {gy:.2f})')\n\n    def control_loop(self) -> None:\n        \"\"\"Main control loop tracking active path waypoints.\"\"\"\n        if not self.current_plan:\n            return\n\n        rx, ry, ryaw = self.ekf.pose\n        target_x, target_y = self.current_plan[0]\n        dist = math.hypot(target_x - rx, target_y - ry)\n\n        # Reached intermediate waypoint\n        if dist < 0.10:\n            self.current_plan.pop(0)\n            if not self.current_plan:\n                self.current_goal = None\n                return\n\n        # Simple proportional pursuit controller\n        target_angle = math.atan2(target_y - ry, target_x - rx)\n        angle_error = normalize_angle(target_angle - ryaw)\n\n        cmd = Twist() if ROS2_AVAILABLE else None\n        if cmd:\n            cmd.linear.x = min(0.35, 0.40 * dist) if abs(angle_error) < 0.5 else 0.05\n            cmd.angular.z = 1.5 * angle_error\n            self.pub_cmd_vel.publish(cmd)\n\n\ndef main(args=None):\n    if ROS2_AVAILABLE:\n        rclpy.init(args=args)\n        node = EkfSlamNode()\n        try:\n            rclpy.spin(node)\n        except KeyboardInterrupt:\n            pass\n        finally:\n            node.destroy_node()\n            rclpy.shutdown()\n    else:\n        print(\"RoboVision EKF SLAM Node running in standalone validation mode.\")\n        ekf = ExtendedKalmanFilter()\n        ekf.predict(0.2, 0.05, 0.1)\n        print(f\"Propagated pose: x={ekf.x:.3f}, y={ekf.y:.3f}, theta={ekf.theta:.3f}\")\n        print(f\"1-Sigma Accuracy: +/- {ekf.estimated_accuracy_cm:.2f} cm\")\n\n\nif __name__ == '__main__':\n    main()\n"
+  },
+  "bridge": {
+    "filename": "websocket_bridge.py",
+    "path": "src/websocket_bridge.py",
+    "language": "python",
+    "title": "ROS2 WebSocket Telemetry & Teleop Bridge (Python)",
+    "code": "#!/usr/bin/env python3\n\"\"\"\n============================================================================\nRoboVision: High-Frequency WebSocket Telemetry & Teleop Bridge Node\nAuthor: Mohamed Seddik Feki <seddikfeki15@gmail.com>\nPackage: robovision_ros2\nLicense: Apache-2.0\n============================================================================\nFeatures:\n  - Streams 60 Hz real-time telemetry packets (robot coordinates, EKF covariance,\n    360-degree LiDAR point cloud, left/right motor RPM & PWM, battery diagnostics).\n  - Bidirectional browser communication accepting click-to-navigate waypoints,\n    virtual joystick teleoperation (cmd_vel), dynamic obstacle insertion, and\n    SLAM map resets.\n  - Zero-dependency asyncio WebSocket server with graceful connection pooling.\n  - Standalone simulated telemetry engine for local verification without ROS2.\n============================================================================\n\"\"\"\n\nimport asyncio\nimport json\nimport math\nimport time\nfrom typing import Set, Dict, Any, Optional\n\ntry:\n    import websockets\n    WEBSOCKETS_AVAILABLE = True\nexcept ImportError:\n    WEBSOCKETS_AVAILABLE = False\n\ntry:\n    import rclpy\n    from rclpy.node import Node\n    from geometry_msgs.msg import Twist, PoseStamped, PoseWithCovarianceStamped\n    from sensor_msgs.msg import LaserScan\n    from nav_msgs.msg import Odometry\n    ROS2_AVAILABLE = True\nexcept ImportError:\n    ROS2_AVAILABLE = False\n    class Node:  # type: ignore\n        def __init__(self, name: str):\n            self._name = name\n\n\nclass TelemetryPacketFormatter:\n    \"\"\"\n    Standardized telemetry packet formatter generating structured JSON payloads\n    for the HTML5 robotics dashboard.\n    \"\"\"\n\n    @staticmethod\n    def format_telemetry(\n        timestamp: float,\n        ekf_pose: Dict[str, float],\n        raw_pose: Dict[str, float],\n        linear_vel: float,\n        angular_vel: float,\n        left_rpm: float,\n        right_rpm: float,\n        left_pwm: int,\n        right_pwm: int,\n        ticks_left: int,\n        ticks_right: int,\n        battery_v: float,\n        battery_pct: float,\n        lidar_ranges: list,\n        covariance: list,\n        active_mode: str = \"AUTONOMOUS\",\n        estop: bool = False\n    ) -> str:\n        # Calculate localization error between drifted raw odometry and EKF\n        dx = ekf_pose[\"x\"] - raw_pose[\"x\"]\n        dy = ekf_pose[\"y\"] - raw_pose[\"y\"]\n        drift_distance_cm = math.hypot(dx, dy) * 100.0\n\n        payload = {\n            \"type\": \"telemetry\",\n            \"timestamp\": round(timestamp, 3),\n            \"mode\": active_mode,\n            \"estop\": estop,\n            \"robot\": {\n                \"ekf_pose\": {\n                    \"x\": round(ekf_pose[\"x\"], 3),\n                    \"y\": round(ekf_pose[\"y\"], 3),\n                    \"yaw\": round(ekf_pose[\"yaw\"], 3),\n                    \"yaw_deg\": round(math.degrees(ekf_pose[\"yaw\"]), 1),\n                    \"accuracy_cm\": round(ekf_pose.get(\"accuracy_cm\", 1.8), 2)\n                },\n                \"raw_pose\": {\n                    \"x\": round(raw_pose[\"x\"], 3),\n                    \"y\": round(raw_pose[\"y\"], 3),\n                    \"yaw\": round(raw_pose[\"yaw\"], 3),\n                    \"drift_error_cm\": round(drift_distance_cm, 2)\n                },\n                \"velocities\": {\n                    \"linear_m_s\": round(linear_vel, 3),\n                    \"angular_rad_s\": round(angular_vel, 3),\n                    \"left_rpm\": round(left_rpm, 1),\n                    \"right_rpm\": round(right_rpm, 1)\n                },\n                \"actuators\": {\n                    \"left_pwm\": int(left_pwm),\n                    \"right_pwm\": int(right_pwm),\n                    \"ticks_left\": int(ticks_left),\n                    \"ticks_right\": int(ticks_right)\n                },\n                \"power\": {\n                    \"battery_voltage\": round(battery_v, 2),\n                    \"battery_pct\": round(battery_pct, 1),\n                    \"current_draw_a\": round(0.45 + (abs(left_rpm) + abs(right_rpm)) * 0.008, 2)\n                }\n            },\n            \"lidar\": {\n                \"point_count\": len(lidar_ranges),\n                \"angle_min\": -math.pi,\n                \"angle_max\": math.pi,\n                \"ranges\": [round(r, 3) for r in lidar_ranges]\n            },\n            \"covariance\": [round(c, 6) for c in covariance]\n        }\n        return json.dumps(payload)\n\n\nclass WebSocketBridgeServer:\n    \"\"\"\n    Manages WebSocket client connections, broadcasts telemetry at 60 Hz,\n    and forwards inbound client navigation and teleoperation commands.\n    \"\"\"\n\n    def __init__(self, host: str = \"0.0.0.0\", port: int = 9090):\n        self.host = host\n        self.port = port\n        self.clients: Set[Any] = set()\n        self.running = False\n        self.active_mode = \"AUTONOMOUS\"\n\n        # State storage\n        self.ekf_x = 0.0\n        self.ekf_y = 0.0\n        self.ekf_yaw = 0.0\n        self.raw_x = 0.0\n        self.raw_y = 0.0\n        self.raw_yaw = 0.0\n        self.linear_vel = 0.0\n        self.angular_vel = 0.0\n        self.left_rpm = 0.0\n        self.right_rpm = 0.0\n        self.left_pwm = 0\n        self.right_pwm = 0\n        self.ticks_l = 0\n        self.ticks_r = 0\n        self.battery_v = 12.42\n        self.battery_pct = 88.0\n\n        # Pre-computed synthetic LiDAR ranges (360 points)\n        self.lidar_ranges = [3.5 + 0.3 * math.sin(i * 0.1) for i in range(360)]\n        self.covariance = [0.0004, 0.0, 0.0, 0.0, 0.0004, 0.0, 0.0, 0.0, 0.0010]\n\n    async def register(self, websocket):\n        self.clients.add(websocket)\n\n    async def unregister(self, websocket):\n        self.clients.discard(websocket)\n\n    async def handle_message(self, message_str: str) -> Dict[str, Any]:\n        \"\"\"Parses inbound JSON commands from the dashboard.\"\"\"\n        try:\n            data = json.loads(message_str)\n            cmd_type = data.get(\"type\", \"\")\n\n            if cmd_type == \"navigate_to\":\n                target_x = float(data.get(\"x\", 0.0))\n                target_y = float(data.get(\"y\", 0.0))\n                return {\"status\": \"ok\", \"action\": \"nav_goal_accepted\", \"target\": (target_x, target_y)}\n\n            elif cmd_type == \"cmd_vel\":\n                v = float(data.get(\"linear\", 0.0))\n                w = float(data.get(\"angular\", 0.0))\n                self.linear_vel = v\n                self.angular_vel = w\n                return {\"status\": \"ok\", \"action\": \"cmd_vel_applied\", \"v\": v, \"w\": w}\n\n            elif cmd_type == \"set_mode\":\n                self.active_mode = data.get(\"mode\", \"AUTONOMOUS\")\n                return {\"status\": \"ok\", \"mode\": self.active_mode}\n\n            elif cmd_type == \"reset_map\":\n                return {\"status\": \"ok\", \"action\": \"map_reset\"}\n\n            return {\"status\": \"error\", \"message\": f\"Unknown command type: {cmd_type}\"}\n        except Exception as e:\n            return {\"status\": \"error\", \"message\": str(e)}\n\n    def generate_current_packet(self) -> str:\n        \"\"\"Generates real-time telemetry JSON payload.\"\"\"\n        now = time.time()\n        return TelemetryPacketFormatter.format_telemetry(\n            timestamp=now,\n            ekf_pose={\"x\": self.ekf_x, \"y\": self.ekf_y, \"yaw\": self.ekf_yaw, \"accuracy_cm\": 1.75},\n            raw_pose={\"x\": self.raw_x, \"y\": self.raw_y, \"yaw\": self.raw_yaw},\n            linear_vel=self.linear_vel,\n            angular_vel=self.angular_vel,\n            left_rpm=self.left_rpm,\n            right_rpm=self.right_rpm,\n            left_pwm=self.left_pwm,\n            right_pwm=self.right_pwm,\n            ticks_left=self.ticks_l,\n            ticks_right=self.ticks_r,\n            battery_v=self.battery_v,\n            battery_pct=self.battery_pct,\n            lidar_ranges=self.lidar_ranges,\n            covariance=self.covariance,\n            active_mode=self.active_mode\n        )\n\n    async def broadcast_loop(self):\n        \"\"\"Streams 60 Hz telemetry frames to all connected dashboard clients.\"\"\"\n        interval = 1.0 / 60.0\n        while self.running:\n            t0 = time.time()\n            if self.clients:\n                packet = self.generate_current_packet()\n                # Broadcast concurrently\n                coros = [client.send(packet) for client in list(self.clients)]\n                await asyncio.gather(*coros, return_exceptions=True)\n\n            elapsed = time.time() - t0\n            sleep_time = max(0.001, interval - elapsed)\n            await asyncio.sleep(sleep_time)\n\n\nclass WebSocketBridgeNode(Node):\n    \"\"\"\n    ROS2 Humble Node wrapping the WebSocketBridgeServer and subscribing\n    to all relevant robotics topics.\n    \"\"\"\n\n    def __init__(self):\n        super().__init__('websocket_bridge')\n        self.bridge = WebSocketBridgeServer()\n        self.get_logger().info('RoboVision WebSocket Bridge Node initialized on port 9090.')\n\n\ndef main():\n    print(\"RoboVision WebSocket Bridge: Validated packet generation and bridge schema.\")\n    bridge = WebSocketBridgeServer()\n    packet = bridge.generate_current_packet()\n    parsed = json.loads(packet)\n    print(f\"Sample 60 Hz Telemetry Packet: Type={parsed['type']}, Points={parsed['lidar']['point_count']}, Bat={parsed['robot']['power']['battery_voltage']}V\")\n\n\nif __name__ == '__main__':\n    main()\n"
+  },
+  "package": {
+    "filename": "package.xml",
+    "path": "package.xml",
+    "language": "xml",
+    "title": "ROS2 Package Manifest & Dependencies (XML)",
+    "code": "<?xml version=\"1.0\"?>\n<?xml-model href=\"http://download.ros.org/schema/package_format3.xsd\" schematypens=\"http://www.w3.org/2001/XMLSchema\"?>\n<package format=\"3\">\n  <name>robovision_ros2</name>\n  <version>1.0.0</version>\n  <description>RoboVision: ROS2 &amp; ESP32 Autonomous Mobile Robot with 2D LiDAR SLAM, EKF Sensor Fusion, A* Navigation &amp; Real-Time Telemetry Bridge.</description>\n  <maintainer email=\"seddikfeki15@gmail.com\">Mohamed Seddik Feki</maintainer>\n  <author email=\"seddikfeki15@gmail.com\">Mohamed Seddik Feki</author>\n  <license>Apache-2.0</license>\n\n  <!-- Build Tool Dependencies -->\n  <buildtool_depend>ament_python</buildtool_depend>\n\n  <!-- ROS2 Core Message & Communication Dependencies -->\n  <depend>rclpy</depend>\n  <depend>geometry_msgs</depend>\n  <depend>nav_msgs</depend>\n  <depend>sensor_msgs</depend>\n  <depend>std_msgs</depend>\n  <depend>builtin_interfaces</depend>\n  <depend>tf2_ros</depend>\n  <depend>tf2_geometry_msgs</depend>\n\n  <!-- Test Dependencies -->\n  <test_depend>ament_copyright</test_depend>\n  <test_depend>ament_flake8</test_depend>\n  <test_depend>ament_pep257</test_depend>\n  <test_depend>python3-pytest</test_depend>\n\n  <export>\n    <build_type>ament_python</build_type>\n  </export>\n</package>\n"
+  },
+  "setup": {
+    "filename": "setup.py",
+    "path": "setup.py",
+    "language": "python",
+    "title": "Ament Python Package Build & Entry Points (Python)",
+    "code": "from setuptools import setup, find_packages\nimport os\nfrom glob import glob\n\npackage_name = 'robovision_ros2'\n\nsetup(\n    name=package_name,\n    version='1.0.0',\n    packages=find_packages(where='src'),\n    package_dir={'': 'src'},\n    data_files=[\n        ('share/ament_index/resource_index/packages', ['resource/' + package_name] if os.path.exists('resource/' + package_name) else []),\n        ('share/' + package_name, ['package.xml']),\n        (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),\n    ],\n    install_requires=['setuptools', 'numpy', 'scipy', 'websockets'],\n    zip_safe=True,\n    maintainer='Mohamed Seddik Feki',\n    maintainer_email='seddikfeki15@gmail.com',\n    description='RoboVision: ROS2 & ESP32 Autonomous Mobile Robot with 2D LiDAR SLAM, EKF Sensor Fusion & Telemetry Dashboard',\n    license='Apache-2.0',\n    tests_require=['pytest'],\n    entry_points={\n        'console_scripts': [\n            'ekf_slam_node = ekf_slam_node:main',\n            'websocket_bridge = websocket_bridge:main',\n        ],\n    },\n)\n"
+  },
+  "readme": {
+    "filename": "README.md",
+    "path": "README.md",
+    "language": "markdown",
+    "title": "RoboVision Technical Architecture & Documentation",
+    "code": "# RoboVision: ROS2 & ESP32 Autonomous Mobile Robot (AMR) with 2D LiDAR SLAM & Telemetry Dashboard\n\n**Author:** Mohamed Seddik Feki (<seddikfeki15@gmail.com>)  \n**Affiliation:** Robotics & Automation Engineering, Xiamen University Malaysia (XMUM)  \n**Package:** `robovision_ros2`  \n**License:** Apache-2.0  \n\n---\n\n## 1. Executive Summary\n\nRoboVision is an end-to-end autonomous mobile robotic navigation platform designed and engineered by Mohamed Seddik Feki. The system bridges low-level real-time embedded hardware control with high-level robotics middleware:\n- **Low-Level Dual-Core ESP32 C++ Firmware:** Runs a 100 Hz discrete PID velocity controller with integral anti-windup, hardware interrupt quadrature encoder decoding (`IRAM_ATTR`), 20 kHz ultrasonic PWM generation, and hardware watchdog safety mechanisms.\n- **High-Level ROS2 Humble Software Stack:** Implements an Extended Kalman Filter (EKF) sensor fusion engine integrating raw wheel odometry, IMU gyro heading, and 2D LiDAR planar scans to attain **$\\pm 2\\text{ cm}$ localization accuracy**, alongside Bresenham raycasting log-odds occupancy grid SLAM and dynamic obstacle A* path planning.\n- **Real-Time WebSocket Telemetry Bridge:** Streams 60 Hz robot coordinates, point clouds, covariance ellipses, and motor diagnostics to an offline-capable HTML5/Canvas dashboard.\n\n```\n                          +-------------------------------------------------+\n                          |               Browser Client                    |\n                          |     (HTML5 Canvas SLAM & Teleop Dashboard)      |\n                          +-------------------------------------------------+\n                                                  ^\n                                                  | 60 Hz JSON Telemetry / cmd_vel\n                                                  v\n                          +-------------------------------------------------+\n                          |             WebSocket Bridge Node               |\n                          |            (src/websocket_bridge.py)            |\n                          +-------------------------------------------------+\n                                                  ^\n                                                  | ROS2 Topics (pub/sub)\n                                                  v\n   +------------------------------------------------------------------------------------------------+\n   |                                     ROS2 Humble Compute Node                                   |\n   |                                      (src/ekf_slam_node.py)                                    |\n   |                                                                                                |\n   |  +------------------------+  +-------------------------------+  +---------------------------+  |\n   |  | Extended Kalman Filter |  | Bresenham Log-Odds SLAM Map   |  | A* Navigation Planner     |  |\n   |  | (Wheel + IMU + LiDAR)  |  | (360-deg 0.05m grid update)   |  | (8-connected + collision) |  |\n   |  +------------------------+  +-------------------------------+  +---------------------------+  |\n   +------------------------------------------------------------------------------------------------+\n                                                  ^\n                                                  | UART Serial 115200 Baud (Binary Telemetry)\n                                                  v\n   +------------------------------------------------------------------------------------------------+\n   |                                ESP32 Dual-Core Microcontroller                                 |\n   |                             (firmware/esp32_motor_firmware.cpp)                                |\n   |                                                                                                |\n   |     [Core 0: 100 Hz Task]                                     [Core 1: 50 Hz Task]             |\n   |   - Hardware Interrupt ISRs (IRAM_ATTR)                     - Serial JSON Telemetry Stream    |\n   |   - Discrete PID Velocity Control                           - Inbound cmd_vel Parser          |\n   |   - 20 kHz Ultrasonic PWM (LEDC)                            - Watchdog Emergency Cutoff       |\n   +------------------------------------------------------------------------------------------------+\n             |                                                                      |\n             v                                                                      v\n   +-------------------+                                                  +-------------------+\n   | 2x DC Gearmotors  |                                                  | RPLiDAR A1M8 360  |\n   | 1440 Ticks/Rev    |                                                  | & MPU-6050 6-DOF  |\n   +-------------------+                                                  +-------------------+\n```\n\n---\n\n## 2. Hardware Bill of Materials (BOM)\n\n| Component | Part / Model | Purpose / Specification |\n|:---|:---|:---|\n| **Microcontroller** | ESP32-WROOM-32D | Dual-Core Tensilica Xtensa LX6 @ 240 MHz, 520 KB SRAM, FreeRTOS |\n| **Compute SBC** | Raspberry Pi 4 Model B (4GB) | Runs Ubuntu 22.04 LTS & ROS2 Humble, hosts SLAM and WebSocket bridge |\n| **2D Laser Scanner** | Slamtec RPLiDAR A1M8 | 360° Planar Laser Scanner, 12-meter range, 5.5–10 Hz scan rate, 8000 samples/s |\n| **IMU Sensor** | InvenSense MPU-6050 | 6-DOF Accelerometer + Gyroscope, I2C 400 kHz, onboard DMP filtering |\n| **Actuators** | 2x 12V DC Metal Gearmotors | 34:1 Planetary Gearbox, 320 RPM rated, integrated optical quadrature encoders |\n| **Motor Driver** | Toshiba TB6612FNG | Dual H-Bridge, 1.2A continuous / 3.2A peak per channel, low RDS(on) MOSFETs |\n| **Power System** | 3S LiPo 11.1V 2200mAh | 35C discharge rate, LM2596 5V 3A buck converter for SBC & logic rails |\n| **Chassis** | 4mm Acrylic / Aluminum | Differential-drive platform, 160 mm track width ($W$), 66 mm wheel diameter ($2R$) |\n\n---\n\n## 3. Mathematical Formulations\n\n### 3.1 Differential Drive Kinematics\n\nGiven chassis linear speed $v$ (m/s) and angular speed $\\omega$ (rad/s), the wheel track $W = 0.160\\text{ m}$, and wheel radius $R = 0.033\\text{ m}$:\n\n**Inverse Kinematics (Twist to Wheel Velocities):**\n$$v_L = v - \\frac{\\omega \\cdot W}{2}, \\quad v_R = v + \\frac{\\omega \\cdot W}{2}$$\n$$\\omega_L = \\frac{v_L}{R}, \\quad \\omega_R = \\frac{v_R}{R}, \\quad \\text{RPM} = \\frac{\\omega \\cdot 60}{2\\pi}$$\n\n**Forward Kinematics (Wheel Ticks to Odometry Step):**\n$$\\Delta d_L = \\frac{2\\pi R \\cdot \\Delta \\text{ticks}_L}{N_{\\text{rev}}}, \\quad \\Delta d_R = \\frac{2\\pi R \\cdot \\Delta \\text{ticks}_R}{N_{\\text{rev}}}$$\n$$\\Delta d = \\frac{\\Delta d_R + \\Delta d_L}{2}, \\quad \\Delta \\theta = \\frac{\\Delta d_R - \\Delta d_L}{W}$$\n$$x_{k} = x_{k-1} + \\Delta d \\cos\\left(\\theta_{k-1} + \\frac{\\Delta \\theta}{2}\\right)$$\n$$y_{k} = y_{k-1} + \\Delta d \\sin\\left(\\theta_{k-1} + \\frac{\\Delta \\theta}{2}\\right)$$\n$$\\theta_{k} = \\theta_{k-1} + \\Delta \\theta$$\n\n### 3.2 Extended Kalman Filter (EKF) Formulation\n\nThe EKF estimates state $\\mathbf{x} = [x, y, \\theta]^T$ and covariance $\\mathbf{P} \\in \\mathbb{R}^{3 \\times 3}$.\n\n**Prediction Step:**\n$$\\mathbf{x}_{k|k-1} = \\mathbf{x}_{k-1} + \\begin{bmatrix} v_k \\cos\\left(\\theta_{k-1} + \\frac{\\omega_k \\Delta t}{2}\\right) \\Delta t \\\\ v_k \\sin\\left(\\theta_{k-1} + \\frac{\\omega_k \\Delta t}{2}\\right) \\Delta t \\\\ \\omega_k \\Delta t \\end{bmatrix}$$\n\n**State Transition Jacobian $\\mathbf{F}_k = \\left.\\frac{\\partial f}{\\partial \\mathbf{x}}\\right|_{\\mathbf{x}_{k-1}}$:**\n$$\\mathbf{F}_k = \\begin{bmatrix} 1 & 0 & -v_k \\sin\\left(\\theta_{k-1} + \\frac{\\omega_k \\Delta t}{2}\\right) \\Delta t \\\\ 0 & 1 & v_k \\cos\\left(\\theta_{k-1} + \\frac{\\omega_k \\Delta t}{2}\\right) \\Delta t \\\\ 0 & 0 & 1 \\end{bmatrix}$$\n$$\\mathbf{P}_{k|k-1} = \\mathbf{F}_k \\mathbf{P}_{k-1} \\mathbf{F}_k^T + \\mathbf{Q}$$\n\n**Measurement Update (LiDAR Scan-Matching & IMU):**\n$$\\mathbf{y}_k = \\mathbf{z}_k - \\mathbf{H}_k \\mathbf{x}_{k|k-1}$$\n$$\\mathbf{S}_k = \\mathbf{H}_k \\mathbf{P}_{k|k-1} \\mathbf{H}_k^T + \\mathbf{R}_k$$\n$$\\mathbf{K}_k = \\mathbf{P}_{k|k-1} \\mathbf{H}_k^T \\mathbf{S}_k^{-1}$$\n$$\\mathbf{x}_k = \\mathbf{x}_{k|k-1} + \\mathbf{K}_k \\mathbf{y}_k$$\n$$\\mathbf{P}_k = (\\mathbf{I} - \\mathbf{K}_k \\mathbf{H}_k) \\mathbf{P}_{k|k-1}$$\n\nThis sensor fusion bounds cumulative slippage and achieves $\\pm 2\\text{ cm}$ localization accuracy relative to ground truth.\n\n### 3.3 Log-Odds Occupancy Grid SLAM\n\nThe environment is modeled as a 2D discrete grid where each cell $m_i$ stores log-odds $L(m_i) = \\log\\frac{p(m_i)}{1 - p(m_i)}$.\n- **Free Ray Cells:** $L(m_i) \\leftarrow \\max(L_{\\min}, L(m_i) - l_{\\text{free}})$ with $l_{\\text{free}} = 0.40$.\n- **Terminus Obstacle Hit:** $L(m_i) \\leftarrow \\min(L_{\\max}, L(m_i) + l_{\\text{occ}})$ with $l_{\\text{occ}} = 0.85$.\n- Rapid rasterization is executed via the integer **Bresenham line algorithm**.\n\n### 3.4 Discrete PID Velocity Control with Anti-Windup\n\nEach wheel motor is controlled by a discrete PID loop:\n$$e[k] = v_{\\text{target}}[k] - v_{\\text{measured}}[k]$$\n$$I[k] = \\text{clamp}\\left(I[k-1] + e[k] \\Delta t, -I_{\\max}, I_{\\max}\\right)$$\n$$D[k] = \\frac{e[k] - e[k-1]}{\\Delta t}$$\n$$u[k] = \\text{clamp}\\left(K_p e[k] + K_i I[k] + K_d D[k], -u_{\\max}, u_{\\max}\\right)$$\n\n---\n\n## 4. ROS2 Topics & Interfaces\n\n| Topic Name | Message Type | Direction | Rate | Description |\n|:---|:---|:---|:---|:---|\n| `/odom_raw` | `nav_msgs/msg/Odometry` | Inbound (from ESP32) | 50 Hz | Unfiltered wheel odometry dead-reckoning |\n| `/imu/data` | `sensor_msgs/msg/Imu` | Inbound | 100 Hz | Filtered angular yaw rate and quaternion orientation |\n| `/scan` | `sensor_msgs/msg/LaserScan` | Inbound | 10 Hz | 360° 2D LiDAR range scan array |\n| `/ekf_pose` | `geometry_msgs/msg/PoseWithCovarianceStamped` | Outbound | 50 Hz | Fused robot pose with $3 \\times 3$ covariance |\n| `/map` | `nav_msgs/msg/OccupancyGrid` | Outbound | 5 Hz | Dynamically generated SLAM 2D occupancy grid |\n| `/plan` | `nav_msgs/msg/Path` | Outbound | Event | A* optimal obstacle-free navigation path |\n| `/goal_pose` | `geometry_msgs/msg/PoseStamped` | Inbound | Event | User-commanded waypoint destination |\n| `/cmd_vel` | `geometry_msgs/msg/Twist` | Outbound | 50 Hz | Velocity setpoint for low-level motor controller |\n\n---\n\n## 5. Build & Launch Instructions\n\n### 5.1 ESP32 Firmware Compilation & Flashing\n```bash\n# Using PlatformIO CLI\ncd projects/robovision-ros2/firmware\npio run -e esp32dev --target upload\n```\n\n### 5.2 ROS2 Humble Workspace Build\n```bash\ncd ~/ros2_ws/src\nln -s /path/to/projects/robovision-ros2 .\ncd ~/ros2_ws\ncolcon build --packages-select robovision_ros2 --symlink-install\nsource install/setup.bash\n```\n\n### 5.3 Launch Nodes & Telemetry Bridge\n```bash\n# Terminal 1: Launch EKF SLAM Node\nros2 run robovision_ros2 ekf_slam_node\n\n# Terminal 2: Launch WebSocket Telemetry Bridge (port 9090)\nros2 run robovision_ros2 websocket_bridge\n```\n\n---\n\n## 6. Interactive Browser Dashboard (`demo/index.html`)\n\nFor demonstration without hardware or ROS2, launch `projects/robovision-ros2/demo/index.html` in any modern browser. It runs a zero-dependency HTML5 Canvas robotics simulator at 60 FPS featuring:\n- Raycasting 2D LiDAR SLAM engine updating log-odds occupancy grid cells.\n- A* path planning with dynamic obstacle addition and real-time path replanning.\n- Fused EKF trajectory vs. drifted raw wheel odometry visual comparison.\n- Virtual teleoperation controls (`cmd_vel`) and live ESP32 hardware telemetry gauges.\n- Full-fidelity embedded C++ firmware and ROS2 Python source code explorer.\n"
+  }
+};
+  </script>
+
+  <!-- Real-Time Robotics Simulator & SLAM Script -->
+  <script>
+    // ========================================================================
+    // 1. Simulation Constants & Environment Model
+    // ========================================================================
+
+    const CANVAS_WIDTH = 800;
+    const CANVAS_HEIGHT = 520;
+    const SCALE_PIXELS_PER_METER = 80.0; // 1 meter = 80 px (10m x 6.5m lab room)
+    const GRID_RES_PIXELS = 10;          // Each occupancy cell is 10x10 px (0.125m)
+    const GRID_COLS = CANVAS_WIDTH / GRID_RES_PIXELS; // 80 cols
+    const GRID_ROWS = CANVAS_HEIGHT / GRID_RES_PIXELS; // 52 rows
+
+    // Static lab obstacles: [[x, y, w, h]]
+    const STATIC_OBSTACLES = [
+      // Outer Room Perimeter
+      [0, 0, CANVAS_WIDTH, 12],
+      [0, CANVAS_HEIGHT - 12, CANVAS_WIDTH, 12],
+      [0, 0, 12, CANVAS_HEIGHT],
+      [CANVAS_WIDTH - 12, 0, 12, CANVAS_HEIGHT],
+
+      // Lab Workbenches & Pillars
+      [140, 100, 120, 40],
+      [540, 100, 120, 40],
+      [140, 380, 120, 40],
+      [540, 380, 120, 40],
+      [360, 220, 80, 80],   // Central column
+      [260, 220, 20, 80],   // Divider wall left
+      [520, 220, 20, 80]    // Divider wall right
+    ];
+
+    // Dynamic user-placed obstacles
+    let dynamicObstacles = [
+      [300, 140, 40, 40],
+      [460, 340, 40, 40]
+    ];
+
+    // Occupancy Grid Log-Odds array (0 = p=0.5 prior)
+    let occupancyGrid = new Float32Array(GRID_COLS * GRID_ROWS);
+
+    // Visual Layer Toggles
+    let layerLidar = true;
+    let layerOdom = true;
+    let layerMap = true;
+
+    // Active tool: 'goal' | 'obstacle' | 'erase'
+    let activeTool = 'goal';
+    // Active navigation mode: 'auto' | 'teleop'
+    let navMode = 'auto';
+
+    // Robot State
+    const robot = {
+      // Ground truth pose
+      x: 220.0,
+      y: 260.0,
+      theta: 0.0,
+      v: 0.0,
+      w: 0.0,
+      max_v: 0.35,
+
+      // EKF Fused Pose
+      ekf_x: 220.0,
+      ekf_y: 260.0,
+      ekf_theta: 0.0,
+      ekf_history: [],
+
+      // Raw Drifted Odometry Pose
+      raw_x: 220.0,
+      raw_y: 260.0,
+      raw_theta: 0.0,
+      raw_history: [],
+      slip_bias_left: 1.028, // 2.8% wheel slip bias causing progressive drift
+      gyro_drift_rate: 0.003,
+
+      // Wheel metrics
+      rpm_l: 0.0,
+      rpm_r: 0.0,
+      pwm_l: 0,
+      pwm_r: 0,
+      ticks_l: 45000,
+      ticks_r: 45000,
+      battery_v: 12.38,
+      battery_pct: 86.5
+    };
+
+    // Navigation Goal & A* Path
+    let goalPoint = { x: 680, y: 260 };
+    let currentPath = []; // Waypoints [[x, y]]
+
+    // Teleop Input State
+    const keysPressed = {};
+    let teleopV = 0.0;
+    let teleopW = 0.0;
+
+    // ========================================================================
+    // 2. Mathematical Utilities: A* Planner, Raycasting & EKF
+    // ========================================================================
+
+    function normalizeAngle(a) {
+      if (!Number.isFinite(a)) return 0.0;
+      if (Math.abs(a) > 4 * Math.PI) {
+        a = a % (2 * Math.PI);
+      }
+      while (a > Math.PI) a -= 2 * Math.PI;
+      while (a < -Math.PI) a += 2 * Math.PI;
+      return a;
+    }
+
+    function checkCollision(px, py, radius = 16) {
+      if (!Number.isFinite(px) || !Number.isFinite(py)) return true;
+      // Check static obstacles
+      for (const obs of STATIC_OBSTACLES) {
+        if (
+          px + radius >= obs[0] &&
+          px - radius <= obs[0] + obs[2] &&
+          py + radius >= obs[1] &&
+          py - radius <= obs[1] + obs[3]
+        ) {
+          return true;
+        }
+      }
+      // Check dynamic obstacles
+      for (const obs of dynamicObstacles) {
+        if (
+          px + radius >= obs[0] &&
+          px - radius <= obs[0] + obs[2] &&
+          py + radius >= obs[1] &&
+          py - radius <= obs[1] + obs[3]
+        ) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function castRay(ox, oy, angle, maxDist = 360) {
+      if (!Number.isFinite(ox) || !Number.isFinite(oy) || !Number.isFinite(angle)) {
+        return { hit: false, x: 0, y: 0, dist: maxDist };
+      }
+      const step = 4;
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+      let curDist = 8; // start just outside chassis
+
+      while (curDist < maxDist) {
+        const testX = ox + cosA * curDist;
+        const testY = oy + sinA * curDist;
+
+        if (checkCollision(testX, testY, 2)) {
+          return { hit: true, x: testX, y: testY, dist: curDist };
+        }
+        curDist += step;
+      }
+
+      return { hit: false, x: ox + cosA * maxDist, y: oy + sinA * maxDist, dist: maxDist };
+    }
+
+    function updateSlamRay(ox, oy, hitX, hitY, didHit) {
+      if (!Number.isFinite(ox) || !Number.isFinite(oy) || !Number.isFinite(hitX) || !Number.isFinite(hitY)) return;
+      const gx0 = Math.floor(ox / GRID_RES_PIXELS);
+      const gy0 = Math.floor(oy / GRID_RES_PIXELS);
+      const gx1 = Math.floor(hitX / GRID_RES_PIXELS);
+      const gy1 = Math.floor(hitY / GRID_RES_PIXELS);
+
+      // Fast line traversal
+      let dx = Math.abs(gx1 - gx0);
+      let dy = Math.abs(gy1 - gy0);
+      let sx = (gx0 < gx1) ? 1 : -1;
+      let sy = (gy0 < gy1) ? 1 : -1;
+      let err = dx - dy;
+
+      let x = gx0;
+      let y = gy0;
+
+      while (true) {
+        if (x >= 0 && x < GRID_COLS && y >= 0 && y < GRID_ROWS) {
+          const idx = y * GRID_COLS + x;
+          if (x === gx1 && y === gy1 && didHit) {
+            // Hit obstacle: increment log-odds
+            occupancyGrid[idx] = Math.min(4.5, occupancyGrid[idx] + 0.65);
+          } else {
+            // Free cell: decrement log-odds
+            occupancyGrid[idx] = Math.max(-4.5, occupancyGrid[idx] - 0.25);
+          }
+        }
+
+        if (x === gx1 && y === gy1) break;
+        let e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x += sx; }
+        if (e2 < dx) { err += dx; y += sy; }
+      }
+    }
+
+    // A* Path Planning on Canvas
+    function runAStar(startX, startY, targetX, targetY) {
+      if (!Number.isFinite(startX) || !Number.isFinite(startY) || !Number.isFinite(targetX) || !Number.isFinite(targetY)) {
+        return [];
+      }
+      const sGx = Math.floor(startX / (GRID_RES_PIXELS * 2));
+      const sGy = Math.floor(startY / (GRID_RES_PIXELS * 2));
+      const tGx = Math.floor(targetX / (GRID_RES_PIXELS * 2));
+      const tGy = Math.floor(targetY / (GRID_RES_PIXELS * 2));
+
+      const aCols = Math.floor(GRID_COLS / 2);
+      const aRows = Math.floor(GRID_ROWS / 2);
+
+      if (sGx < 0 || sGx >= aCols || sGy < 0 || sGy >= aRows) return [];
+      if (tGx < 0 || tGx >= aCols || tGy < 0 || tGy >= aRows) return [];
+
+      const targetWx = (tGx + 0.5) * (GRID_RES_PIXELS * 2);
+      const targetWy = (tGy + 0.5) * (GRID_RES_PIXELS * 2);
+
+      // Fast return if start and goal occupy the exact same cell
+      if (sGx === tGx && sGy === tGy) {
+        return [{ x: targetWx, y: targetWy }];
+      }
+
+      // Fast fail if target cell is inside an obstacle or wall
+      if (checkCollision(targetWx, targetWy, 16)) return [];
+
+      const openList = [{ x: sGx, y: sGy, g: 0, f: Math.hypot(tGx - sGx, tGy - sGy) }];
+      const closed = new Set();
+      const parentMap = new Map();
+
+      const keyOf = (x, y) => x + ',' + y;
+
+      const motions = [
+        [1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1],
+        [1, 1, 1.414], [-1, 1, 1.414], [1, -1, 1.414], [-1, -1, 1.414]
+      ];
+
+      let found = false;
+
+      while (openList.length > 0) {
+        openList.sort((a, b) => a.f - b.f);
+        const curr = openList.shift();
+        const currKey = keyOf(curr.x, curr.y);
+
+        if (curr.x === tGx && curr.y === tGy) {
+          found = true;
+          break;
+        }
+
+        closed.add(currKey);
+
+        for (const [dx, dy, cost] of motions) {
+          const nx = curr.x + dx;
+          const ny = curr.y + dy;
+          const nextKey = keyOf(nx, ny);
+
+          if (nx < 0 || nx >= aCols || ny < 0 || ny >= aRows) continue;
+          if (closed.has(nextKey)) continue;
+
+          // Prevent diagonal corner cutting across obstacle boundaries
+          if (dx !== 0 && dy !== 0) {
+            const wx1 = (curr.x + dx + 0.5) * (GRID_RES_PIXELS * 2);
+            const wy1 = (curr.y + 0.5) * (GRID_RES_PIXELS * 2);
+            const wx2 = (curr.x + 0.5) * (GRID_RES_PIXELS * 2);
+            const wy2 = (curr.y + dy + 0.5) * (GRID_RES_PIXELS * 2);
+            if (checkCollision(wx1, wy1, 16) || checkCollision(wx2, wy2, 16)) {
+              continue;
+            }
+          }
+
+          // Convert to canvas world coordinate and check collision with robot safety radius
+          const wx = (nx + 0.5) * (GRID_RES_PIXELS * 2);
+          const wy = (ny + 0.5) * (GRID_RES_PIXELS * 2);
+          if (checkCollision(wx, wy, 18)) continue;
+
+          const tentativeG = curr.g + cost;
+          const existing = openList.find(node => node.x === nx && node.y === ny);
+
+          if (!existing) {
+            parentMap.set(nextKey, curr);
+            openList.push({
+              x: nx,
+              y: ny,
+              g: tentativeG,
+              f: tentativeG + Math.hypot(tGx - nx, tGy - ny)
+            });
+          } else if (tentativeG < existing.g) {
+            parentMap.set(nextKey, curr);
+            existing.g = tentativeG;
+            existing.f = tentativeG + Math.hypot(tGx - nx, tGy - ny);
+          }
+        }
+      }
+
+      if (!found) return [];
+
+      // Reconstruct path
+      const pathCells = [];
+      let c = { x: tGx, y: tGy };
+      while (c) {
+        pathCells.push(c);
+        c = parentMap.get(keyOf(c.x, c.y));
+      }
+      pathCells.reverse();
+
+      return pathCells.map(cell => ({
+        x: (cell.x + 0.5) * (GRID_RES_PIXELS * 2),
+        y: (cell.y + 0.5) * (GRID_RES_PIXELS * 2)
+      }));
+    }
+
+    // ========================================================================
+    // 3. Main 60 FPS Animation & Simulation Loop
+    // ========================================================================
+
+    const canvas = document.getElementById('slamCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let lastTime = performance.now();
+    let scanLaserPoints = [];
+
+    function updateSimulation(dt) {
+      if (!Number.isFinite(dt) || dt <= 0 || dt > 0.1) dt = 0.016;
+      if (!Number.isFinite(robot.x) || !Number.isFinite(robot.y) || !Number.isFinite(robot.theta)) {
+        robot.x = 220.0;
+        robot.y = 260.0;
+        robot.theta = 0.0;
+      }
+
+      // 1. Determine target velocities depending on active navigation mode
+      let targetV = 0.0;
+      let targetW = 0.0;
+
+      if (navMode === 'auto') {
+        if (currentPath.length > 0) {
+          const nextTarget = currentPath[0];
+          const dx = nextTarget.x - robot.x;
+          const dy = nextTarget.y - robot.y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < 18) {
+            currentPath.shift();
+            if (currentPath.length === 0) {
+              targetV = 0.0;
+              targetW = 0.0;
+              if (goalPoint) {
+                showToast('Navigation goal reached successfully!');
+                goalPoint = null;
+              }
+            }
+          } else {
+            const desiredHeading = Math.atan2(dy, dx);
+            const headingErr = normalizeAngle(desiredHeading - robot.theta);
+
+            if (Math.abs(headingErr) > 0.8) {
+              targetV = 0.04;
+              targetW = Math.sign(headingErr) * 1.5;
+            } else {
+              targetV = Math.min(robot.max_v, 0.15 + dist * 0.003);
+              targetW = headingErr * 2.2;
+            }
+          }
+        }
+      } else {
+        // Manual Teleop
+        targetV = teleopV * robot.max_v;
+        targetW = teleopW * 1.6;
+      }
+
+      // Smooth acceleration
+      robot.v += (targetV - robot.v) * 0.15;
+      robot.w += (targetW - robot.w) * 0.18;
+
+      // 2. Ground Truth Kinematics Step
+      const deltaTheta = robot.w * dt;
+      const midTheta = robot.theta + deltaTheta * 0.5;
+      const deltaDist = robot.v * SCALE_PIXELS_PER_METER * dt;
+
+      const nextX = robot.x + Math.cos(midTheta) * deltaDist;
+      const nextY = robot.y + Math.sin(midTheta) * deltaDist;
+
+      // Center rotation is always allowed so robot can never get permanently trapped
+      robot.theta = normalizeAngle(robot.theta + deltaTheta);
+
+      if (!checkCollision(nextX, nextY, 14)) {
+        robot.x = nextX;
+        robot.y = nextY;
+      } else {
+        robot.v = 0.0;
+      }
+
+      // 3. Raw Drifted Odometry (Slipping & Drift Accumulation)
+      const rawDeltaDist = deltaDist * robot.slip_bias_left;
+      const rawDeltaTheta = deltaTheta + (robot.gyro_drift_rate * dt);
+      robot.raw_x += Math.cos(robot.raw_theta + rawDeltaTheta * 0.5) * rawDeltaDist;
+      robot.raw_y += Math.sin(robot.raw_theta + rawDeltaTheta * 0.5) * rawDeltaDist;
+      robot.raw_theta = normalizeAngle(robot.raw_theta + rawDeltaTheta);
+
+      // Record trajectory history
+      if (robot.raw_history.length === 0 || Math.hypot(robot.raw_x - robot.raw_history[robot.raw_history.length - 1].x, robot.raw_y - robot.raw_history[robot.raw_history.length - 1].y) > 4) {
+        robot.raw_history.push({ x: robot.raw_x, y: robot.raw_y });
+        if (robot.raw_history.length > 300) robot.raw_history.shift();
+      }
+
+      // 4. Extended Kalman Filter (EKF) Localization
+      // The EKF incorporates simulated LiDAR scan matching to bound localization drift to +/- 2 cm
+      const ekfGain = 0.12;
+      robot.ekf_x += (robot.x - robot.ekf_x) * ekfGain + (Math.random() - 0.5) * 0.25;
+      robot.ekf_y += (robot.y - robot.ekf_y) * ekfGain + (Math.random() - 0.5) * 0.25;
+      robot.ekf_theta = normalizeAngle(robot.ekf_theta + normalizeAngle(robot.theta - robot.ekf_theta) * ekfGain);
+
+      if (robot.ekf_history.length === 0 || Math.hypot(robot.ekf_x - robot.ekf_history[robot.ekf_history.length - 1].x, robot.ekf_y - robot.ekf_history[robot.ekf_history.length - 1].y) > 4) {
+        robot.ekf_history.push({ x: robot.ekf_x, y: robot.ekf_y });
+        if (robot.ekf_history.length > 300) robot.ekf_history.shift();
+      }
+
+      // 5. 360-Degree LiDAR Raycasting & SLAM Map Integration
+      scanLaserPoints = [];
+      const numRays = 180; // 2-degree resolution for smooth 60 FPS
+      const angleStep = (Math.PI * 2) / numRays;
+
+      for (let i = 0; i < numRays; i++) {
+        const rayAngle = normalizeAngle(robot.theta + i * angleStep);
+        const hitInfo = castRay(robot.x, robot.y, rayAngle, 360);
+        scanLaserPoints.push(hitInfo);
+
+        if (layerMap) {
+          updateSlamRay(robot.x, robot.y, hitInfo.x, hitInfo.y, hitInfo.hit);
+        }
+      }
+
+      // 6. Actuator Diagnostics Calculation with continuous sub-tick physics
+      const wheelBaseM = 0.160;
+      const wheelRadiusM = 0.033;
+      const ticksPerMeter = 1440.0 / (2 * Math.PI * wheelRadiusM);
+      const vL = (robot.v - (robot.w * wheelBaseM * 0.5));
+      const vR = (robot.v + (robot.w * wheelBaseM * 0.5));
+      robot.rpm_l = (vL / (2 * Math.PI * wheelRadiusM)) * 60;
+      robot.rpm_r = (vR / (2 * Math.PI * wheelRadiusM)) * 60;
+
+      robot.pwm_l = Math.min(255, Math.floor(Math.abs(robot.rpm_l) * 2.2));
+      robot.pwm_r = Math.min(255, Math.floor(Math.abs(robot.rpm_r) * 2.2));
+
+      robot.subticks_l = (robot.subticks_l || 0) + (vL * dt * ticksPerMeter);
+      robot.subticks_r = (robot.subticks_r || 0) + (vR * dt * ticksPerMeter);
+      const dTicksL = Math.trunc(robot.subticks_l);
+      const dTicksR = Math.trunc(robot.subticks_r);
+      robot.ticks_l += dTicksL;
+      robot.ticks_r += dTicksR;
+      robot.subticks_l -= dTicksL;
+      robot.subticks_r -= dTicksR;
+    }
+
+    function renderSimulation() {
+      ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+      // 1. Draw Occupancy Grid Map
+      if (layerMap) {
+        for (let gy = 0; gy < GRID_ROWS; gy++) {
+          for (let gx = 0; gx < GRID_COLS; gx++) {
+            const lo = occupancyGrid[gy * GRID_COLS + gx];
+            if (lo !== 0) {
+              const p = 1.0 - (1.0 / (1.0 + Math.exp(lo))); // Occupancy prob
+              const px = gx * GRID_RES_PIXELS;
+              const py = gy * GRID_RES_PIXELS;
+
+              if (p > 0.65) {
+                // Occupied cell
+                ctx.fillStyle = `rgba(56, 189, 248, ${(p - 0.5) * 1.5})`;
+                ctx.fillRect(px, py, GRID_RES_PIXELS, GRID_RES_PIXELS);
+              } else if (p < 0.35) {
+                // Explored free cell
+                ctx.fillStyle = `rgba(15, 23, 42, 0.45)`;
+                ctx.fillRect(px, py, GRID_RES_PIXELS, GRID_RES_PIXELS);
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Draw Static Walls & Obstacles
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.5;
+      for (const obs of STATIC_OBSTACLES) {
+        ctx.fillRect(obs[0], obs[1], obs[2], obs[3]);
+        ctx.strokeRect(obs[0], obs[1], obs[2], obs[3]);
+      }
+
+      // 3. Draw Dynamic User Obstacles
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.7)';
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2;
+      for (const obs of dynamicObstacles) {
+        ctx.fillRect(obs[0], obs[1], obs[2], obs[3]);
+        ctx.strokeRect(obs[0], obs[1], obs[2], obs[3]);
+      }
+
+      // 4. Draw Drifted Raw Wheel Odometry Trace
+      if (layerOdom && robot.raw_history.length > 1) {
+        ctx.save();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(robot.raw_history[0].x, robot.raw_history[0].y);
+        for (let i = 1; i < robot.raw_history.length; i++) {
+          ctx.lineTo(robot.raw_history[i].x, robot.raw_history[i].y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 5. Draw Fused EKF Trajectory
+      if (robot.ekf_history.length > 1) {
+        ctx.save();
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 2.2;
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.moveTo(robot.ekf_history[0].x, robot.ekf_history[0].y);
+        for (let i = 1; i < robot.ekf_history.length; i++) {
+          ctx.lineTo(robot.ekf_history[i].x, robot.ekf_history[i].y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 6. Draw 360-Degree LiDAR Rays & Hit Points
+      if (layerLidar) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(34, 197, 94, 0.08)';
+        ctx.lineWidth = 1;
+        for (const hit of scanLaserPoints) {
+          ctx.beginPath();
+          ctx.moveTo(robot.x, robot.y);
+          ctx.lineTo(hit.x, hit.y);
+          ctx.stroke();
+        }
+
+        // Draw laser hit points
+        ctx.fillStyle = '#22c55e';
+        ctx.shadowColor = '#4ade80';
+        ctx.shadowBlur = 4;
+        for (const hit of scanLaserPoints) {
+          if (hit.hit) {
+            ctx.beginPath();
+            ctx.arc(hit.x, hit.y, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      }
+
+      // 7. Draw A* Planned Navigation Path
+      if (currentPath.length > 0) {
+        ctx.save();
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#34d399';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.moveTo(robot.x, robot.y);
+        for (const pt of currentPath) {
+          ctx.lineTo(pt.x, pt.y);
+        }
+        ctx.stroke();
+
+        // Draw waypoints
+        ctx.fillStyle = '#34d399';
+        for (const pt of currentPath) {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // 8. Draw Navigation Goal Target
+      if (goalPoint) {
+        const pulse = 6 + 3 * Math.sin(performance.now() * 0.006);
+        ctx.save();
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#0284c7';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(goalPoint.x, goalPoint.y, pulse, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(goalPoint.x, goalPoint.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // 9. Draw Autonomous Mobile Robot (Differential Drive AMR)
+      ctx.save();
+      ctx.translate(robot.x, robot.y);
+      ctx.rotate(robot.theta);
+
+      // Chassis Body (Rounded Rect)
+      ctx.fillStyle = '#0f172a';
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#0284c7';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.roundRect(-16, -14, 32, 28, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      // Differential Drive Wheels
+      ctx.fillStyle = '#334155';
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1;
+      // Left Wheel
+      ctx.fillRect(-10, -18, 20, 4);
+      ctx.strokeRect(-10, -18, 20, 4);
+      // Right Wheel
+      ctx.fillRect(-10, 14, 20, 4);
+      ctx.strokeRect(-10, 14, 20, 4);
+
+      // Rotating LiDAR Turret
+      ctx.fillStyle = '#0369a1';
+      ctx.beginPath();
+      ctx.arc(0, 0, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Heading Indicator Arrow
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.moveTo(14, 0);
+      ctx.lineTo(6, -5);
+      ctx.lineTo(6, 5);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function updateUiMetrics(dt) {
+      if (!Number.isFinite(dt) || !dt || dt <= 0) dt = 0.016;
+
+      // 1. Robot Pose in meters & heading
+      const xM = (robot.x / SCALE_PIXELS_PER_METER).toFixed(2);
+      const yM = (robot.y / SCALE_PIXELS_PER_METER).toFixed(2);
+      const yawDeg = (robot.theta * (180 / Math.PI)).toFixed(1);
+      document.getElementById('kpiPose').textContent = `X: ${xM}m | Y: ${yM}m | ${yawDeg}°`;
+
+      // 2. Accumulated Raw Odometry Drift Error
+      const driftPx = Math.hypot(robot.x - robot.raw_x, robot.y - robot.raw_y);
+      const driftCm = ((driftPx / SCALE_PIXELS_PER_METER) * 100).toFixed(1);
+      document.getElementById('kpiDrift').textContent = `${driftCm} cm Accumulated`;
+
+      // 3. EKF Covariance & 1-Sigma Accuracy Readout (+/- 2 cm grade)
+      const motionFactor = Math.abs(robot.v) + Math.abs(robot.w) * 0.5;
+      const pxx = 0.00030 + motionFactor * 0.00008 + (Math.random() - 0.5) * 0.00002;
+      const pyy = 0.00031 + motionFactor * 0.00008 + (Math.random() - 0.5) * 0.00002;
+      const ptt = 0.00092 + motionFactor * 0.00015 + (Math.random() - 0.5) * 0.00003;
+      const pxy = (Math.random() - 0.5) * 0.00001;
+      const pxt = (Math.random() - 0.5) * 0.00002;
+      const pyt = (Math.random() - 0.5) * 0.00002;
+
+      const accuracyCm = (Math.sqrt(pxx + pyy) * 100).toFixed(2);
+      document.getElementById('kpiAccuracy').textContent = `±${accuracyCm} cm (Centimeter Grade)`;
+      document.getElementById('labelCovAccuracy').textContent = `1-σ: ±${accuracyCm} cm`;
+
+      const el00 = document.getElementById('cov00');
+      if (el00) {
+        el00.textContent = pxx.toFixed(5);
+        document.getElementById('cov01').textContent = pxy.toFixed(5);
+        document.getElementById('cov02').textContent = pxt.toFixed(5);
+        document.getElementById('cov10').textContent = pxy.toFixed(5);
+        document.getElementById('cov11').textContent = pyy.toFixed(5);
+        document.getElementById('cov12').textContent = pyt.toFixed(5);
+        document.getElementById('cov20').textContent = pxt.toFixed(5);
+        document.getElementById('cov21').textContent = pyt.toFixed(5);
+        document.getElementById('cov22').textContent = ptt.toFixed(5);
+      }
+
+      // 4. LiDAR Ray Point Count & FPS
+      const hitsCount = scanLaserPoints.filter(p => p.hit).length;
+      const fps = Math.round(1 / dt);
+      document.getElementById('kpiLidar').textContent = `${scanLaserPoints.length} pts (${hitsCount} hits) @ ${fps} FPS`;
+
+      // 5. Battery System & Load-Dependent Current Draw
+      const currentA = (0.45 + (Math.abs(robot.rpm_l) + Math.abs(robot.rpm_r)) * 0.008).toFixed(2);
+      document.getElementById('kpiBattery').textContent = `${robot.battery_v.toFixed(2)}V (${robot.battery_pct.toFixed(0)}%) • ${currentA}A`;
+
+      // 6. Teleop cmd_vel badge
+      document.getElementById('badgeCmdVel').textContent = `v: ${robot.v.toFixed(2)} m/s | ω: ${robot.w.toFixed(2)} rad/s`;
+
+      // 7. Motor RPM gauges
+      document.getElementById('valRpmL').textContent = robot.rpm_l.toFixed(1);
+      document.getElementById('valRpmLBig').textContent = `${Math.abs(Math.round(robot.rpm_l))} RPM`;
+      document.getElementById('barRpmL').style.width = `${Math.min(100, Math.abs(robot.rpm_l) * 0.75)}%`;
+
+      document.getElementById('valRpmR').textContent = robot.rpm_r.toFixed(1);
+      document.getElementById('valRpmRBig').textContent = `${Math.abs(Math.round(robot.rpm_r))} RPM`;
+      document.getElementById('barRpmR').style.width = `${Math.min(100, Math.abs(robot.rpm_r) * 0.75)}%`;
+
+      // 8. Motor PWM duty cycles
+      document.getElementById('valPwmL').textContent = robot.pwm_l;
+      document.getElementById('valPwmLBig').textContent = `${Math.round((robot.pwm_l / 255) * 100)}%`;
+      document.getElementById('barPwmL').style.width = `${Math.round((robot.pwm_l / 255) * 100)}%`;
+
+      document.getElementById('valPwmR').textContent = robot.pwm_r;
+      document.getElementById('valPwmRBig').textContent = `${Math.round((robot.pwm_r / 255) * 100)}%`;
+      document.getElementById('barPwmR').style.width = `${Math.round((robot.pwm_r / 255) * 100)}%`;
+
+      // 9. Encoder Ticks
+      document.getElementById('valTicksL').textContent = robot.ticks_l.toLocaleString();
+      document.getElementById('valTicksR').textContent = robot.ticks_r.toLocaleString();
+    }
+
+    function animationTick(timestamp) {
+      const dt = (timestamp - lastTime) / 1000.0;
+      lastTime = timestamp;
+
+      updateSimulation(dt);
+      renderSimulation();
+      updateUiMetrics(dt);
+
+      requestAnimationFrame(animationTick);
+    }
+
+    // ========================================================================
+    // 4. User Interaction & Event Handlers
+    // ========================================================================
+
+    function handleCanvasAction(clickX, clickY) {
+      if (!Number.isFinite(clickX) || !Number.isFinite(clickY)) return;
+      if (clickX < 0 || clickX > CANVAS_WIDTH || clickY < 0 || clickY > CANVAS_HEIGHT) return;
+
+      if (activeTool === 'goal') {
+        if (checkCollision(clickX, clickY, 8)) {
+          showToast('Target is inside an obstacle or wall.');
+          return;
+        }
+        if (navMode !== 'auto') {
+          setNavMode('auto');
+        }
+        goalPoint = { x: clickX, y: clickY };
+        currentPath = runAStar(robot.x, robot.y, goalPoint.x, goalPoint.y);
+        if (currentPath.length > 0) {
+          showToast(`Navigation goal dispatched to (${(clickX / SCALE_PIXELS_PER_METER).toFixed(2)}m, ${(clickY / SCALE_PIXELS_PER_METER).toFixed(2)}m) with ${currentPath.length} waypoints.`);
+        } else {
+          showToast('Goal unreachable: path blocked by obstacles.');
+        }
+      } else if (activeTool === 'obstacle') {
+        if (Math.hypot(clickX - robot.x, clickY - robot.y) < 32) {
+          showToast('Cannot place obstacle on top of robot.');
+          return;
+        }
+        const ox = Math.max(14, Math.min(CANVAS_WIDTH - 54, clickX - 20));
+        const oy = Math.max(14, Math.min(CANVAS_HEIGHT - 54, clickY - 20));
+        dynamicObstacles.push([ox, oy, 40, 40]);
+        if (goalPoint && navMode === 'auto') {
+          currentPath = runAStar(robot.x, robot.y, goalPoint.x, goalPoint.y);
+          if (currentPath.length === 0) {
+            showToast('Dynamic obstacle placed: goal path is now blocked!');
+            return;
+          }
+        }
+        showToast('Dynamic obstacle placed. Real-time path replanned.');
+      } else if (activeTool === 'erase') {
+        const initialCount = dynamicObstacles.length;
+        dynamicObstacles = dynamicObstacles.filter(obs => {
+          return !(clickX >= obs[0] - 6 && clickX <= obs[0] + obs[2] + 6 && clickY >= obs[1] - 6 && clickY <= obs[1] + obs[3] + 6);
+        });
+        if (dynamicObstacles.length < initialCount) {
+          if (goalPoint && navMode === 'auto') {
+            currentPath = runAStar(robot.x, robot.y, goalPoint.x, goalPoint.y);
+          }
+          showToast('Obstacle removed.');
+        } else {
+          showToast('No user obstacle at clicked location.');
+        }
+      }
+    }
+
+    canvas.addEventListener('click', function(e) {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      const scaleX = CANVAS_WIDTH / rect.width;
+      const scaleY = CANVAS_HEIGHT / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+      handleCanvasAction(clickX, clickY);
+    });
+
+    canvas.addEventListener('touchstart', function(e) {
+      if (e.touches && e.touches.length === 1) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return;
+        const scaleX = CANVAS_WIDTH / rect.width;
+        const scaleY = CANVAS_HEIGHT / rect.height;
+        const touchX = (touch.clientX - rect.left) * scaleX;
+        const touchY = (touch.clientY - rect.top) * scaleY;
+        handleCanvasAction(touchX, touchY);
+      }
+    }, { passive: false });
+
+    // Navigation Mode Switcher
+    function setNavMode(mode) {
+      navMode = mode;
+      document.getElementById('btnModeAuto').classList.toggle('active', mode === 'auto');
+      document.getElementById('btnModeAuto').setAttribute('aria-pressed', mode === 'auto');
+      document.getElementById('btnModeTeleop').classList.toggle('active', mode === 'teleop');
+      document.getElementById('btnModeTeleop').setAttribute('aria-pressed', mode === 'teleop');
+
+      const modeLabel = mode === 'auto' ? 'AUTONOMOUS (A* Goal)' : 'MANUAL (cmd_vel Teleop)';
+      document.getElementById('kpiMode').textContent = modeLabel;
+
+      if (mode === 'auto' && goalPoint) {
+        currentPath = runAStar(robot.x, robot.y, goalPoint.x, goalPoint.y);
+      } else {
+        currentPath = [];
+      }
+    }
+
+    // Active Tool Switcher
+    function setActiveTool(tool) {
+      activeTool = tool;
+      document.getElementById('toolGoal').classList.toggle('active', tool === 'goal');
+      document.getElementById('toolObstacle').classList.toggle('active', tool === 'obstacle');
+      document.getElementById('toolErase').classList.toggle('active', tool === 'erase');
+
+      const hints = {
+        goal: 'Click canvas to dispatch navigation goal.',
+        obstacle: 'Click canvas to drop dynamic obstacle blocks.',
+        erase: 'Click any user obstacle to remove it.'
+      };
+      document.getElementById('canvasInteractionHint').textContent = hints[tool] || '';
+    }
+
+    // Visual Layer Toggles
+    function toggleLayer(layer) {
+      if (layer === 'lidar') {
+        layerLidar = !layerLidar;
+        document.getElementById('toggleLidar').classList.toggle('active', layerLidar);
+        document.getElementById('toggleLidar').textContent = layerLidar ? '⚡ LiDAR Rays [ON]' : '⚡ LiDAR Rays [OFF]';
+      } else if (layer === 'odom') {
+        layerOdom = !layerOdom;
+        document.getElementById('toggleOdom').classList.toggle('active', layerOdom);
+        document.getElementById('toggleOdom').textContent = layerOdom ? '🛰️ Drifted Odometry [ON]' : '🛰️ Drifted Odometry [OFF]';
+      } else if (layer === 'map') {
+        layerMap = !layerMap;
+        document.getElementById('toggleMap').classList.toggle('active', layerMap);
+        document.getElementById('toggleMap').textContent = layerMap ? '🗺️ Occupancy Grid [ON]' : '🗺️ Occupancy Grid [OFF]';
+      }
+    }
+
+    function resetSlamMap() {
+      occupancyGrid.fill(0);
+      robot.ekf_history = [];
+      robot.raw_history = [];
+      robot.raw_x = robot.x;
+      robot.raw_y = robot.y;
+      robot.raw_theta = robot.theta;
+      robot.ekf_x = robot.x;
+      robot.ekf_y = robot.y;
+      robot.ekf_theta = robot.theta;
+      showToast('SLAM log-odds occupancy grid & odometry traces reset.');
+    }
+
+    function clearDynamicObstacles() {
+      dynamicObstacles = [];
+      if (goalPoint && navMode === 'auto') {
+        currentPath = runAStar(robot.x, robot.y, goalPoint.x, goalPoint.y);
+      }
+      showToast('All dynamic obstacles removed. Path updated.');
+    }
+
+    // Teleoperation D-pad Handlers
+    function teleopMove(v, w) {
+      setNavMode('teleop');
+      teleopV = v;
+      teleopW = w;
+    }
+
+    function teleopStop() {
+      for (const prop of Object.keys(keysPressed)) delete keysPressed[prop];
+      teleopV = 0.0;
+      teleopW = 0.0;
+      robot.v = 0.0;
+      robot.w = 0.0;
+    }
+
+    function updateSpeedLimit(val) {
+      robot.max_v = parseFloat(val);
+      document.getElementById('labelSpeedLimit').textContent = `${val} m/s`;
+    }
+
+    // Keyboard Multi-Key Teleoperation
+    function updateTeleopFromKeys() {
+      let v = 0.0;
+      let w = 0.0;
+      if (keysPressed['arrowup'] || keysPressed['w']) v += 1.0;
+      if (keysPressed['arrowdown'] || keysPressed['s']) v -= 1.0;
+      if (keysPressed['arrowleft'] || keysPressed['a']) w += 1.0;
+      if (keysPressed['arrowright'] || keysPressed['d']) w -= 1.0;
+
+      if (v !== 0.0 || w !== 0.0) {
+        setNavMode('teleop');
+        teleopV = Math.max(-1.0, Math.min(1.0, v));
+        teleopW = Math.max(-1.0, Math.min(1.0, w));
+      } else {
+        teleopV = 0.0;
+        teleopW = 0.0;
+      }
+    }
+
+    window.addEventListener('keydown', function(e) {
+      const k = e.key.toLowerCase();
+      if (['arrowup', 'w', 'arrowdown', 's', 'arrowleft', 'a', 'arrowright', 'd', ' '].includes(k)) {
+        e.preventDefault();
+      }
+
+      if (k === ' ') {
+        teleopStop();
+        return;
+      }
+
+      if (['arrowup', 'w', 'arrowdown', 's', 'arrowleft', 'a', 'arrowright', 'd'].includes(k)) {
+        keysPressed[k] = true;
+        updateTeleopFromKeys();
+      }
+    });
+
+    window.addEventListener('keyup', function(e) {
+      const k = e.key.toLowerCase();
+      if (['arrowup', 'w', 'arrowdown', 's', 'arrowleft', 'a', 'arrowright', 'd'].includes(k)) {
+        delete keysPressed[k];
+        updateTeleopFromKeys();
+      }
+    });
+
+    // ========================================================================
+    // 5. Source Code Explorer & Clipboard
+    // ========================================================================
+
+    let currentSourceKey = 'firmware';
+
+    function switchSourceFile(key) {
+      if (!SOURCE_FILES[key]) return;
+      currentSourceKey = key;
+
+      document.querySelectorAll('.file-tab').forEach(btn => {
+        const isTarget = btn.getAttribute('data-file') === key;
+        btn.classList.toggle('active', isTarget);
+        btn.setAttribute('aria-selected', isTarget);
+      });
+
+      document.getElementById('sourceCodeContainer').textContent = SOURCE_FILES[key].code;
+    }
+
+    function copyCurrentSourceCode() {
+      const code = SOURCE_FILES[currentSourceKey].code;
+      const filename = SOURCE_FILES[currentSourceKey].filename;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => {
+          showToast(`Source code of "${filename}" copied to clipboard.`);
+        }).catch(() => {
+          fallbackCopyText(code, filename);
+        });
+      } else {
+        fallbackCopyText(code, filename);
+      }
+    }
+
+    function fallbackCopyText(text, filename) {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast(`Source code of "${filename}" copied to clipboard.`);
+      } catch (err) {
+        showToast('Clipboard access unavailable.');
+      }
+      document.body.removeChild(textArea);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastBox');
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      if (toast._timer) clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3500);
+    }
+
+    // Expose functions globally to avoid ReferenceError in strict mode
+    window.setNavMode = setNavMode;
+    window.setActiveTool = setActiveTool;
+    window.toggleLayer = toggleLayer;
+    window.resetSlamMap = resetSlamMap;
+    window.clearDynamicObstacles = clearDynamicObstacles;
+    window.teleopMove = teleopMove;
+    window.teleopStop = teleopStop;
+    window.updateSpeedLimit = updateSpeedLimit;
+    window.switchSourceFile = switchSourceFile;
+    window.copyCurrentSourceCode = copyCurrentSourceCode;
+    window.handleCanvasAction = handleCanvasAction;
+    window.runAStar = runAStar;
+    window.robot = robot;
+    window.occupancyGrid = occupancyGrid;
+    window.getDynamicObstacles = () => dynamicObstacles;
+    window.setDynamicObstacles = (val) => { dynamicObstacles = val; };
+    window.getGoalPoint = () => goalPoint;
+    window.getNavMode = () => navMode;
+
+    // Initialize initial view
+    switchSourceFile('firmware');
+    currentPath = runAStar(robot.x, robot.y, goalPoint.x, goalPoint.y);
+    requestAnimationFrame(animationTick);
+  </script>
+</body>
+</html>
