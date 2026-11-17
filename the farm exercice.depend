@@ -1,0 +1,24 @@
+# depslib dependency file v1.0
+1793771214 source:d:\era124 programming c\the farm exercice\calculate.c
+	"farm.h"
+
+1793769956 d:\era124 programming c\the farm exercice\farm.h
+
+1793771206 source:d:\era124 programming c\the farm exercice\main.c
+	<stdio.h>
+	"farm.h"
+
+1793771096 d:\era124 programming c\the farm exercice\getinput.c
+
+1793771096 d:\era124 programming c\the farm exercice\calculate.c
+
+1793771096 d:\era124 programming c\the farm exercice\display.c
+
+1793771224 source:d:\era124 programming c\the farm exercice\display.c
+	<stdio.h>
+	"farm.h"
+
+1793770806 source:d:\era124 programming c\the farm exercice\getinput.c
+	<stdio.h>
+	"farm.h"
+

@@ -1,0 +1,22 @@
+#include <stdio.h>
+
+int factorial(int n);  // Function declaration
+
+int main(void) {
+    int num;
+
+    printf("Enter a non-negative integer: ");
+    scanf("%d", &num);
+
+    printf("Factorial of %d is %d\n", num, factorial(num));
+
+    return 0;
+}
+
+// Function definition
+int factorial(int n) {
+    if (n <= 1)
+        return 1;
+    else
+        return n * factorial(n - 1);
+}

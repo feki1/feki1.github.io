@@ -1,0 +1,18 @@
+# depslib dependency file v1.0
+1794240548 source:d:\era124 programming c\strawberryfarm\strawberryfarm\display.c
+	<stdio.h>
+	"strawberry.h"
+
+1794240412 source:d:\era124 programming c\strawberryfarm\strawberryfarm\input.c
+	<stdio.h>
+	"strawberry.h"
+
+1794240422 d:\era124 programming c\strawberryfarm\strawberryfarm\strawberry.h
+
+1794240418 source:d:\era124 programming c\strawberryfarm\strawberryfarm\main.c
+	<stdio.h>
+	"strawberry.h"
+
+1794240560 source:d:\era124 programming c\strawberryfarm\strawberryfarm\calculate.c
+	"strawberry.h"
+
